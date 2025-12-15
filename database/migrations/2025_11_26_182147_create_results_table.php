@@ -14,6 +14,13 @@ return new class extends Migration
         Schema::create('results', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+            $table->foreignId('user_id')->constrained('users');
+            $table->string('term');
+            $table->string('class');
+            $table->string('remark');
+            $table->string('reg_number');
+            $table->string('session');
+            $table->foreignId('created_by')->constrained('users');
         });
     }
 

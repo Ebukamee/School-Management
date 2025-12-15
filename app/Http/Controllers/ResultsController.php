@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Results;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ResultsController extends Controller
 {
@@ -12,7 +14,9 @@ class ResultsController extends Controller
      */
     public function index()
     {
-        //
+        $results = Results::where('user_id', auth()->user()->id)->with('subjects')->orderBy('term')->get();
+
+        return Inertia::render('/results', ['results' => $results]);
     }
 
     /**
@@ -20,7 +24,7 @@ class ResultsController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('teacher/create');
     }
 
     /**
@@ -28,17 +32,36 @@ class ResultsController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' -> 'required|string',
-            'reg_number'->'required|string',
-            'subjects'->'required|array',
-            'class'->'required|string',
-            'term'->'required|string'
-            'teacher'->'required|string',
-            'remark'->'required|string'
+        $request->validate([
+            'reg_number' => 'required|string',
+            'class' => 'required|string',
+            'term' => 'required|string',
+            'subjects' => 'required|array',
+            'remark' => 'required|string',
+            'sess' => 'required|string',
+        ]);
+        // $student = User::where('reg_number', $request->reg_number)->firstOrFail();
+        $result = Results::create([
+            'user_id' => '34565786970jbf',
+            'term' => $request->term,
+            'class' => $request->class,
+            'remark' => $request->remark,
+            'session' => $request->sess,
+            'reg_number' => $request->reg_number,
+            'created_by' => '435465768796543'
+        ]);
 
-        ])
+        foreach ($request->subjects as $sub) {
+            $result->subjects()->create([
+                'subject_name' => $sub['name'],
+                'ca_score' => $sub['ca_score'],
+                'exam_score' => $sub['exam_score'],
+                'total' => $sub['ca_score'] + $sub['exam_score'],
+                'grade' => $sub['grade'],
+            ]);
+        }
 
+        return redirect()->route('results.index')->with('success', 'Result created!');
     }
 
     /**
