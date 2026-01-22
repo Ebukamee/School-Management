@@ -24,8 +24,8 @@ export default function Login({
 }: LoginProps) {
     return (
         <AuthLayout
-            title="Welcome to Learning Fun! "
-            description="Enter your email and password to start your adventure!"
+            title="Welcome to Portal!"
+            description="Enter your email and password"
         >
             <Head title="Log in" />
 

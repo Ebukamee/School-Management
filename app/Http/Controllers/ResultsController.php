@@ -14,9 +14,13 @@ class ResultsController extends Controller
      */
     public function index()
     {
-        $results = Results::where('user_id', auth()->user()->id)->with('subjects')->orderBy('term')->get();
+        // Show results that belong to the currently logged-in user (Student)
+        $results = Results::where('user_id', auth()->id())
+                    ->with('subjects')
+                    ->orderBy('term')
+                    ->get();
 
-        return Inertia::render('/results', ['results' => $results]);
+        return Inertia::render('results/index', ['results' => $results]);
     }
 
     /**
@@ -32,36 +36,61 @@ class ResultsController extends Controller
      */
     public function store(Request $request)
     {
+        // 1. Validation
         $request->validate([
-            'reg_number' => 'required|string',
-            'class' => 'required|string',
-            'term' => 'required|string',
+            'reg_number' => 'required|exists:users,reg_number', // Ensure student exists
+            'class' => 'required',
+            'term' => 'required',
+            'remark' => 'nullable',
+            'sess' => 'required',
             'subjects' => 'required|array',
-            'remark' => 'required|string',
-            'sess' => 'required|string',
-        ]);
-        // $student = User::where('reg_number', $request->reg_number)->firstOrFail();
-        $result = Results::create([
-            'user_id' => '34565786970jbf',
-            'term' => $request->term,
-            'class' => $request->class,
-            'remark' => $request->remark,
-            'session' => $request->sess,
-            'reg_number' => $request->reg_number,
-            'created_by' => '435465768796543'
         ]);
 
+        // 2. Find the Student Account using the Reg Number
+        // This is the Critical Fix: We get the student's ID, not the teacher's ID.
+        $student = User::where('reg_number', $request->reg_number)->first();
+
+        // 3. Create the main Result Record assigned to the Student
+        $result = Results::create([
+            'user_id' => $student->id,      // <--- FIXED: Assigns result to Student
+            'reg_number' => $request->reg_number,
+            'class' => $request->class,
+            'term' => $request->term,
+            'remark' => $request->remark,
+            'session' => $request->sess,
+            'created_by' => auth()->id(),   // Tracks which teacher uploaded it
+        ]);
+
+        // 4. Loop through subjects and calculate Grade
         foreach ($request->subjects as $sub) {
+            
+            // Calculate total first
+            $total = $sub['ca_score'] + $sub['exam_score'];
+
+            // Calculate grade automatically
+            $grade = $this->getGrade($total);
+
             $result->subjects()->create([
                 'subject_name' => $sub['name'],
                 'ca_score' => $sub['ca_score'],
                 'exam_score' => $sub['exam_score'],
-                'total' => $sub['ca_score'] + $sub['exam_score'],
-                'grade' => $sub['grade'],
+                'total' => $total,
+                'grade' => $grade,
             ]);
         }
 
-        return redirect()->route('results.index')->with('success', 'Result created!');
+        return redirect()->route('results.index')->with('success', 'Result created successfully!');
+    }
+
+    // --- Helper Function to Determine Grade ---
+    private function getGrade($score)
+    {
+        if ($score >= 70) return 'A';
+        if ($score >= 60) return 'B';
+        if ($score >= 50) return 'C';
+        if ($score >= 45) return 'D';
+        if ($score >= 40) return 'E';
+        return 'F';
     }
 
     /**

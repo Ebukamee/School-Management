@@ -1,33 +1,30 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
-interface Subject {
-    name: string;
-    grade: string;
-    score: number;
-    caScore: number;
-    examScore: number;
-    remark: string;
+// --- Types matching your Database Structure ---
+interface DbSubject {
+    id: number;
+    subject_name: string;
+    ca_score: number;
+    exam_score: number;
+    total: number;
+    grade: string; // This comes from your Laravel Backend
 }
 
-interface Term {
+interface DbResult {
+    id: number;
+    class: string;
+    session: string; 
     term: string;
-    average: number;
-    position: string;
-    totalStudents: number;
-    subjects: Subject[];
+    remark: string;
+    subjects: DbSubject[];
+    created_at: string;
 }
 
-interface LevelData {
-    level: string;
-    year: string;
-    terms: Term[];
-}
-
-interface SelectedTerm extends Term {
-    level: string;
+interface Props {
+    results: DbResult[];
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,145 +34,41 @@ const breadcrumbs: BreadcrumbItem[] = [
     }
 ];
 
-export default function Results() {
-    const [selectedTerm, setSelectedTerm] = useState<SelectedTerm | null>(null);
+export default function Results({ results = [] }: Props) {
+    const [selectedTerm, setSelectedTerm] = useState<any | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Mock data structure with CA and Exam scores
-    const academicResults: LevelData[] = [
-        {
-            level: "SS3",
-            year: "2023/2024",
-            terms: [
-                {
-                    term: "First Term",
-                    average: 78.5,
-                    position: "15th",
-                    totalStudents: 45,
-                    subjects: [
-                        { name: "Mathematics", grade: "A", score: 85, caScore: 38, examScore: 47, remark: "Excellent" },
-                        { name: "English Language", grade: "B", score: 72, caScore: 32, examScore: 40, remark: "Good" },
-                        { name: "Physics", grade: "A", score: 88, caScore: 40, examScore: 48, remark: "Excellent" },
-                        { name: "Chemistry", grade: "B+", score: 79, caScore: 35, examScore: 44, remark: "Very Good" },
-                        { name: "Biology", grade: "B", score: 75, caScore: 33, examScore: 42, remark: "Good" },
-                        { name: "Further Mathematics", grade: "A-", score: 82, caScore: 37, examScore: 45, remark: "Very Good" }
-                    ]
-                },
-                {
-                    term: "Second Term",
-                    average: 81.2,
-                    position: "12th",
-                    totalStudents: 45,
-                    subjects: [
-                        { name: "Mathematics", grade: "A", score: 87, caScore: 39, examScore: 48, remark: "Excellent" },
-                        { name: "English Language", grade: "B+", score: 76, caScore: 34, examScore: 42, remark: "Very Good" },
-                        { name: "Physics", grade: "A", score: 90, caScore: 42, examScore: 48, remark: "Outstanding" },
-                        { name: "Chemistry", grade: "A-", score: 83, caScore: 37, examScore: 46, remark: "Excellent" },
-                        { name: "Biology", grade: "B+", score: 78, caScore: 35, examScore: 43, remark: "Very Good" },
-                        { name: "Further Mathematics", grade: "A", score: 85, caScore: 38, examScore: 47, remark: "Excellent" }
-                    ]
-                }
-            ]
-        },
-        {
-            level: "SS2",
-            year: "2022/2023",
-            terms: [
-                {
-                    term: "First Term",
-                    average: 75.8,
-                    position: "18th",
-                    totalStudents: 48,
-                    subjects: [
-                        { name: "Mathematics", grade: "B+", score: 78, caScore: 35, examScore: 43, remark: "Very Good" },
-                        { name: "English Language", grade: "B", score: 70, caScore: 30, examScore: 40, remark: "Good" },
-                        { name: "Physics", grade: "B+", score: 77, caScore: 34, examScore: 43, remark: "Very Good" },
-                        { name: "Chemistry", grade: "B", score: 73, caScore: 32, examScore: 41, remark: "Good" },
-                        { name: "Biology", grade: "B", score: 72, caScore: 31, examScore: 41, remark: "Good" },
-                        { name: "Agricultural Science", grade: "A-", score: 81, caScore: 36, examScore: 45, remark: "Excellent" }
-                    ]
-                },
-                {
-                    term: "Second Term",
-                    average: 77.3,
-                    position: "16th",
-                    totalStudents: 48,
-                    subjects: [
-                        { name: "Mathematics", grade: "A-", score: 82, caScore: 37, examScore: 45, remark: "Excellent" },
-                        { name: "English Language", grade: "B", score: 74, caScore: 32, examScore: 42, remark: "Good" },
-                        { name: "Physics", grade: "A-", score: 80, caScore: 36, examScore: 44, remark: "Excellent" },
-                        { name: "Chemistry", grade: "B+", score: 76, caScore: 34, examScore: 42, remark: "Very Good" },
-                        { name: "Biology", grade: "B+", score: 77, caScore: 34, examScore: 43, remark: "Very Good" },
-                        { name: "Agricultural Science", grade: "A", score: 85, caScore: 38, examScore: 47, remark: "Excellent" }
-                    ]
-                },
-                {
-                    term: "Third Term",
-                    average: 79.1,
-                    position: "14th",
-                    totalStudents: 48,
-                    subjects: [
-                        { name: "Mathematics", grade: "A", score: 84, caScore: 37, examScore: 47, remark: "Excellent" },
-                        { name: "English Language", grade: "B+", score: 77, caScore: 34, examScore: 43, remark: "Very Good" },
-                        { name: "Physics", grade: "A", score: 86, caScore: 38, examScore: 48, remark: "Excellent" },
-                        { name: "Chemistry", grade: "A-", score: 81, caScore: 36, examScore: 45, remark: "Excellent" },
-                        { name: "Biology", grade: "B+", score: 79, caScore: 35, examScore: 44, remark: "Very Good" },
-                        { name: "Agricultural Science", grade: "A", score: 87, caScore: 39, examScore: 48, remark: "Outstanding" }
-                    ]
-                }
-            ]
-        },
-        {
-            level: "SS1",
-            year: "2021/2022",
-            terms: [
-                {
-                    term: "First Term",
-                    average: 72.4,
-                    position: "22nd",
-                    totalStudents: 50,
-                    subjects: [
-                        { name: "Mathematics", grade: "B", score: 75, caScore: 33, examScore: 42, remark: "Good" },
-                        { name: "English Language", grade: "C+", score: 68, caScore: 28, examScore: 40, remark: "Credit" },
-                        { name: "Basic Science", grade: "B", score: 74, caScore: 32, examScore: 42, remark: "Good" },
-                        { name: "Basic Technology", grade: "B-", score: 70, caScore: 30, examScore: 40, remark: "Good" },
-                        { name: "Social Studies", grade: "B+", score: 78, caScore: 35, examScore: 43, remark: "Very Good" },
-                        { name: "Agricultural Science", grade: "A-", score: 80, caScore: 36, examScore: 44, remark: "Excellent" }
-                    ]
-                },
-                {
-                    term: "Second Term",
-                    average: 74.6,
-                    position: "20th",
-                    totalStudents: 50,
-                    subjects: [
-                        { name: "Mathematics", grade: "B+", score: 76, caScore: 34, examScore: 42, remark: "Very Good" },
-                        { name: "English Language", grade: "B", score: 72, caScore: 31, examScore: 41, remark: "Good" },
-                        { name: "Basic Science", grade: "B+", score: 77, caScore: 34, examScore: 43, remark: "Very Good" },
-                        { name: "Basic Technology", grade: "B", score: 73, caScore: 32, examScore: 41, remark: "Good" },
-                        { name: "Social Studies", grade: "A-", score: 81, caScore: 36, examScore: 45, remark: "Excellent" },
-                        { name: "Agricultural Science", grade: "A", score: 83, caScore: 37, examScore: 46, remark: "Excellent" }
-                    ]
-                },
-                {
-                    term: "Third Term",
-                    average: 76.2,
-                    position: "17th",
-                    totalStudents: 50,
-                    subjects: [
-                        { name: "Mathematics", grade: "A-", score: 80, caScore: 36, examScore: 44, remark: "Excellent" },
-                        { name: "English Language", grade: "B", score: 74, caScore: 32, examScore: 42, remark: "Good" },
-                        { name: "Basic Science", grade: "A-", score: 82, caScore: 36, examScore: 46, remark: "Excellent" },
-                        { name: "Basic Technology", grade: "B+", score: 76, caScore: 34, examScore: 42, remark: "Very Good" },
-                        { name: "Social Studies", grade: "A", score: 85, caScore: 38, examScore: 47, remark: "Excellent" },
-                        { name: "Agricultural Science", grade: "A", score: 86, caScore: 38, examScore: 48, remark: "Outstanding" }
-                    ]
-                }
-            ]
-        }
-    ];
+    // --- TRANSFORM DATA: Group flat DB results by Class & Session ---
+    const groupedResults = useMemo(() => {
+        const groups: Record<string, any> = {};
 
-    const openTermModal = (level: string, termData: Term) => {
+        results.forEach((result) => {
+            const key = `${result.class}-${result.session}`;
+
+            if (!groups[key]) {
+                groups[key] = {
+                    level: result.class,
+                    year: result.session,
+                    terms: []
+                };
+            }
+
+            // We calculate the Term Average here just for display
+            const totalScore = result.subjects.reduce((sum, sub) => sum + sub.total, 0);
+            const avg = result.subjects.length > 0 
+                ? (totalScore / result.subjects.length).toFixed(1) 
+                : 0;
+
+            groups[key].terms.push({
+                ...result,
+                average: avg,
+            });
+        });
+
+        return Object.values(groups);
+    }, [results]);
+
+    const openTermModal = (level: string, termData: any) => {
         setSelectedTerm({ level, ...termData });
         setIsModalOpen(true);
     };
@@ -185,24 +78,34 @@ export default function Results() {
         setSelectedTerm(null);
     };
 
+    // --- Visual Helpers (Only for colors, not logic) ---
     const getGradeColor = (grade: string): string => {
-        switch (grade) {
-            case 'A': return 'text-green-600 bg-green-50';
-            case 'A-': return 'text-green-600 bg-green-50';
-            case 'B+': return 'text-blue-600 bg-blue-50';
-            case 'B': return 'text-blue-600 bg-blue-50';
-            case 'B-': return 'text-yellow-600 bg-yellow-50';
-            case 'C+': return 'text-yellow-600 bg-yellow-50';
-            case 'C': return 'text-yellow-600 bg-yellow-50';
-            default: return 'text-red-600 bg-red-50';
-        }
+        // Normalize grade to uppercase just in case
+        const g = grade.toUpperCase();
+        if (g === 'A') return 'text-green-600 bg-green-50';
+        if (g === 'B') return 'text-blue-600 bg-blue-50';
+        if (g === 'C') return 'text-yellow-600 bg-yellow-50';
+        if (g === 'D') return 'text-orange-600 bg-orange-50';
+        return 'text-red-600 bg-red-50';
     };
 
     const getScoreColor = (score: number): string => {
-        if (score >= 80) return 'text-green-600';
-        if (score >= 70) return 'text-blue-600';
-        if (score >= 60) return 'text-yellow-600';
+        if (score >= 70) return 'text-green-600';
+        if (score >= 60) return 'text-blue-600';
+        if (score >= 50) return 'text-yellow-600';
         return 'text-red-600';
+    };
+
+    // --- Display Helper ---
+    // This now translates the GRADE (A, B, C) to a remark
+    // It does NOT calculate based on score anymore.
+    const getRemarkFromGrade = (grade: string) => {
+        const g = grade.toUpperCase();
+        if (g === 'A') return 'Excellent';
+        if (g === 'B') return 'Very Good';
+        if (g === 'C') return 'Credit';
+        if (g === 'D') return 'Pass';
+        return 'Fail';
     };
 
     return (
@@ -216,9 +119,16 @@ export default function Results() {
                     <p className="text-gray-600">View your academic performance across different classes and terms</p>
                 </div>
 
+                {/* Empty State */}
+                {groupedResults.length === 0 && (
+                    <div className="text-center p-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        <p className="text-gray-500">No results found yet.</p>
+                    </div>
+                )}
+
                 {/* Results by Class Level */}
                 <div className="space-y-6 max-w-4xl mx-auto">
-                    {academicResults.map((levelData, index) => (
+                    {groupedResults.map((levelData: any, index: number) => (
                         <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
                             {/* Class Level Header */}
                             <div className="bg-[#37368b] px-6 py-4">
@@ -231,15 +141,15 @@ export default function Results() {
                             {/* Terms List */}
                             <div className="p-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {levelData.terms.map((term, termIndex) => (
+                                    {levelData.terms.map((term: any, termIndex: number) => (
                                         <div
                                             key={termIndex}
                                             onClick={() => openTermModal(levelData.level, term)}
                                             className="border-2 border-gray-200 rounded-xl p-4 hover:border-[#37368b] hover:shadow-md transition-all duration-200 cursor-pointer group"
                                         >
                                             <div className="flex justify-between items-start mb-3">
-                                                <h3 className="font-semibold text-gray-900 group-hover:text-[#37368b]">
-                                                    {term.term}
+                                                <h3 className="font-semibold text-gray-900 group-hover:text-[#37368b] capitalize">
+                                                    {term.term} Term
                                                 </h3>
                                                 <div className="text-right">
                                                     <div className={`text-lg font-bold ${getScoreColor(term.average)}`}>
@@ -250,13 +160,12 @@ export default function Results() {
                                             </div>
                                             
                                             <div className="flex justify-between items-center text-sm text-gray-600">
-                                                <span>Position: {term.position}</span>
-                                                <span>Class: {term.totalStudents}</span>
+                                                <span>Subjects: {term.subjects.length}</span>
                                             </div>
                                             
                                             <div className="mt-3 flex justify-between items-center">
-                                                <span className="text-xs text-gray-500">
-                                                    {term.subjects.length} subjects
+                                                <span className="text-xs text-gray-500 capitalize">
+                                                    {term.remark || "No Remark"}
                                                 </span>
                                                 <button className="text-[#37368b] text-sm font-medium hover:text-[#2a2970]">
                                                     View Details →
@@ -270,31 +179,31 @@ export default function Results() {
                     ))}
                 </div>
 
-             {/* Statistics Summary */}
-                    <div className="mt-12 max-w-4xl mx-auto">
-                        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                            <h3 className="text-lg font-semibold text-gray-900 text-center mb-6">Academic Summary</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="text-center p-3">
-                                    <div className="text-xl font-bold text-[#37368b]">3</div>
-                                    <div className="text-gray-600 text-sm">Classes</div>
+                {/* Statistics Summary */}
+                {groupedResults.length > 0 && (
+                <div className="mt-12 max-w-4xl mx-auto">
+                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900 text-center mb-6">Academic Summary</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div className="text-center p-3">
+                                <div className="text-xl font-bold text-[#37368b]">{groupedResults.length}</div>
+                                <div className="text-gray-600 text-sm">Classes</div>
+                            </div>
+                            <div className="text-center p-3">
+                                <div className="text-xl font-bold text-[#37368b]">{results.length}</div>
+                                <div className="text-gray-600 text-sm">Total Terms</div>
+                            </div>
+                            <div className="text-center p-3">
+                                <div className="text-xl font-bold text-[#37368b]">
+                                    {(results.reduce((acc, curr) => acc + curr.subjects.length, 0))}
                                 </div>
-                                <div className="text-center p-3">
-                                    <div className="text-xl font-bold text-[#37368b]">9</div>
-                                    <div className="text-gray-600 text-sm">Terms</div>
-                                </div>
-                                <div className="text-center p-3">
-                                    <div className="text-xl font-bold text-[#37368b]">77.3%</div>
-                                    <div className="text-gray-600 text-sm">Overall Average</div>
-                                </div>
-                                <div className="text-center p-3">
-                                    <div className="text-xl font-bold text-[#37368b]">16th</div>
-                                    <div className="text-gray-600 text-sm">Avg Position</div>
-                                </div>
+                                <div className="text-gray-600 text-sm">Total Subjects</div>
                             </div>
                         </div>
                     </div>
                 </div>
+                )}
+            </div>
 
             {/* Formal Term Details Modal */}
             {isModalOpen && selectedTerm && (
@@ -304,7 +213,7 @@ export default function Results() {
                         <div className="bg-[#37368b] px-6 py-4 rounded-t-2xl">
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-xl font-bold text-white">{selectedTerm.level} - {selectedTerm.term}</h3>
+                                    <h3 className="text-xl font-bold text-white capitalize">{selectedTerm.level} - {selectedTerm.term} Term</h3>
                                     <p className="text-white/80 text-sm">Academic Performance Details</p>
                                 </div>
                                 <button
@@ -320,27 +229,23 @@ export default function Results() {
 
                         {/* Performance Summary */}
                         <div className="p-6 border-b border-gray-200">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                 <div className="text-center">
                                     <div className="text-2xl font-bold text-[#37368b]">{selectedTerm.average}%</div>
                                     <div className="text-sm text-gray-600">Average Score</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-2xl font-bold text-[#37368b]">{selectedTerm.position}</div>
-                                    <div className="text-sm text-gray-600">Class Position</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-[#37368b]">{selectedTerm.totalStudents}</div>
-                                    <div className="text-sm text-gray-600">Total Students</div>
-                                </div>
-                                <div className="text-center">
                                     <div className="text-2xl font-bold text-[#37368b]">{selectedTerm.subjects.length}</div>
                                     <div className="text-sm text-gray-600">Subjects</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-lg font-bold text-[#37368b] capitalize">{selectedTerm.remark || "N/A"}</div>
+                                    <div className="text-sm text-gray-600">Teacher's Remark</div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Subjects Table with CA and Exam */}
+                        {/* Subjects Table */}
                         <div className="p-6">
                             <h4 className="font-semibold text-[#37368b] mb-4">Subject Performance Breakdown</h4>
                             <div className="overflow-x-auto">
@@ -348,80 +253,61 @@ export default function Results() {
                                     <thead>
                                         <tr className="bg-gray-50 border-b border-gray-200">
                                             <th className="px-4 py-3 text-left text-sm font-semibold text-[#37368b]">Subject</th>
-                                            <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">CA Score</th>
-                                            <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Exam Score</th>
-                                            <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Total Score</th>
+                                            <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">CA</th>
+                                            <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Exam</th>
+                                            <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Total</th>
                                             <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Grade</th>
                                             <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Remark</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-200">
-                                        {selectedTerm.subjects.map((subject, index) => (
+                                        {selectedTerm.subjects.map((subject: DbSubject, index: number) => (
                                             <tr key={index} className="hover:bg-gray-50 transition-colors">
                                                 <td className="px-4 py-3">
-                                                    <div className="font-medium text-gray-900">{subject.name}</div>
+                                                    <div className="font-medium text-gray-900">{subject.subject_name}</div>
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    <div className="font-medium text-gray-700">
-                                                        {subject.caScore}
-                                                    </div>
+                                                    <div className="font-medium text-gray-700">{subject.ca_score}</div>
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    <div className="font-medium text-gray-700">
-                                                        {subject.examScore}
-                                                    </div>
+                                                    <div className="font-medium text-gray-700">{subject.exam_score}</div>
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
-                                                    <div className={`font-semibold ${getScoreColor(subject.score)}`}>
-                                                        {subject.score}%
+                                                    <div className={`font-semibold ${getScoreColor(subject.total)}`}>
+                                                        {subject.total}%
                                                     </div>
                                                 </td>
+                                                {/* HERE: We strictly use the Grade from the Database */}
                                                 <td className="px-4 py-3 text-center">
                                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getGradeColor(subject.grade)}`}>
                                                         {subject.grade}
                                                     </span>
                                                 </td>
+                                                {/* HERE: We map the Remark based on the Grade, not the score */}
                                                 <td className="px-4 py-3 text-center">
-                                                    <span className="text-sm text-gray-600">{subject.remark}</span>
+                                                    <span className="text-sm text-gray-600">
+                                                        {getRemarkFromGrade(subject.grade)}
+                                                    </span>
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
-
-                            {/* Performance Summary */}
-                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-6">
-                                <h4 className="font-semibold text-[#37368b] mb-2">Assessment Summary</h4>
-                                <p className="text-gray-700 text-sm">
-                                    Continuous Assessment (CA) contributes 40% and Examination contributes 60% to the final grade. 
-                                    {selectedTerm.average >= 80 
-                                        ? " Your overall performance is excellent, demonstrating strong understanding across all subjects."
-                                        : selectedTerm.average >= 70
-                                        ? " Your performance is very good, showing consistent effort and understanding of course material."
-                                        : " Continue to focus on improving in areas where scores are lower to enhance overall performance."
-                                    }
-                                </p>
-                            </div>
                         </div>
 
                         {/* Modal Footer */}
                         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-                            <div className="flex justify-between items-center">
-                                <button className="text-gray-600 hover:text-gray-800 text-sm">
-                                    Need assistance with your results?
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    onClick={closeModal}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                                >
+                                    Close
                                 </button>
-                                <div className="flex space-x-3">
-                                    <button
-                                        onClick={closeModal}
-                                        className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
-                                    >
-                                        Close
-                                    </button>
-                                    <button className="bg-yellow-500 text-gray-900 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-colors">
-                                        Print Result
-                                    </button>
-                                </div>
+                                <button className="bg-yellow-500 text-gray-900 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-colors">
+                                    Print Result
+                                </button>
                             </div>
                         </div>
                     </div>

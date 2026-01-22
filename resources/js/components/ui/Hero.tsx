@@ -25,7 +25,7 @@ const Hero = () => {
         <div className="max-w-3xl mx-auto text-center text-white">
           {/* Welcome Text */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Welcome to Northwood High School
+            Welcome to Goldfield Junior School
           </h1>
 
           {/* Tagline */}

@@ -13,7 +13,7 @@ import AuthLayout from '@/layouts/auth-layout';
 export default function Register() {
     return (
         <AuthLayout
-            title="Join Our Learning Adventure! 🎉"
+            title="Register"
             description="Create your account and start your educational journey with us!"
         >
             <Head title="Register" />
@@ -80,6 +80,15 @@ export default function Register() {
                                 />
                                 <InputError message={errors.email} />
                             </div>
+                              <div className="grid gap-3">
+                                <Label htmlFor="email" className="text-[#37368b] font-bold text-lg">
+                                    Registration Number
+                                </Label>
+                                <select name="" id="" required className="border-2 border-[#37368b] focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 rounded-2xl px-4 py-3 text-lg transition-all duration-300 hover:shadow-lg">
+                                    <option value="teacher">Teacher</option>
+                                    <option value="student">Student</option>
+                                </select>
+                            </div>
                             {/* Password Input with Fun Styling */}
                             <div className="grid gap-3">
                                 <Label htmlFor="password" className="text-[#37368b] font-bold text-lg">
@@ -129,7 +138,7 @@ export default function Register() {
                                     <Spinner />
                                 ) : (
                                     <>
-                                        Create My Account!
+                                        Create Account!
                                     </>
                                 )}
                             </Button>
@@ -138,7 +147,7 @@ export default function Register() {
                         {/* Login Link with Fun Styling */}
                         <div className="text-center text-sm p-4 bg-yellow-100 rounded-2xl border-2 border-yellow-300">
                             <span className="text-[#37368b] font-bold">
-                                Already part of our learning family?{' '}
+                                Already registered?{' '}
                             </span>
                             <TextLink 
                                 href={login()} 

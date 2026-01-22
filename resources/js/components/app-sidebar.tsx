@@ -15,6 +15,8 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, BookText, Calendar, BarChart3, Home, Users } from 'lucide-react';
 import AppLogo from './app-logo';
+import AppLogoIcon from './app-logo-icon';
+import { useEffect, useState } from 'react';
 
 const mainNavItems: NavItem[] = [
     {
@@ -47,6 +49,17 @@ const mainNavItems: NavItem[] = [
 
 
 export function AppSidebar() {
+     const [isScrolled, setIsScrolled] = useState(false);
+    
+      useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
     return (
         <Sidebar 
             collapsible="icon" 
@@ -62,15 +75,16 @@ export function AppSidebar() {
                             className="bg-[#37368b] hover:bg-[#2a2970] border-2 border-yellow-400 rounded-xl transition-all duration-300 hover:scale-105"
                         >
                             <Link href={dashboard()} prefetch>
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-8 h-8 bg-yellow-400 rounded-lg flex items-center justify-center">
-                                        <span className="text-[#37368b] font-bold text-sm">NE</span>
-                                    </div>
-                                    <div className="flex flex-col text-left">
-                                        <span className="font-bold text-yellow-400 text-sm leading-tight">Northwood</span>
-                                        <span className="text-yellow-300 text-xs">Elementary</span>
-                                    </div>
-                                </div>
+                                 <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer z-20">
+                                              <div className={`transition-all duration-300 ${isScrolled ? 'w-8 h-8' : 'w-9 h-9'}`}>
+                                                <AppLogoIcon className="w-full h-full" /> 
+                                              </div>
+                                              <h1 className={`font-bold tracking-tight transition-colors duration-300 ${
+                                                isScrolled ? 'text-[#1e40af] text-lg' : 'text-white text-xl'
+                                              }`}>
+                                                Goldfield<span className="font-light opacity-80">Jr.</span>
+                                              </h1>
+                                            </div>
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ResultsController;
+use App\Http\Controllers\ClassesController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -10,19 +11,17 @@ Route::get('/', function () {
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('home');
-Route::post('results', [ResultsController::class, 'store'])->name('results.store');
+Route::post('results', [ResultsController::class, 'store'])->middleware(['auth', 'verified'])->name('results.store');
 Route::middleware(['auth'])->group(function () {
     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
-});m
+});
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
-    Route::get('results', function () {
-        return Inertia::render('results/index');
-    })->name('results');
-      Route::get('/classes', function () {
-        return Inertia::render('classes/index');
-    })->name('classes');
+   Route::get('results', [ResultsController::class, 'index'])->name('results.index');
+    Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');
+    Route::get('classes/create', [ClassesController::class, 'create'])->name('classes.create');
+    Route::post('classes', [ClassesController::class, 'store'])->name('classes.store');
 });
 require __DIR__.'/settings.php';
