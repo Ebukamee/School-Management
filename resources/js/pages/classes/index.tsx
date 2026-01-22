@@ -1,8 +1,25 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 
+// --- Interfaces matching Backend Data ---
+interface DbClass {
+    id: number;
+    subject: string;
+    grade_level: string;
+    day: string;
+    start_time: string;
+    end_time: string;
+    room: string | null;
+}
+
+// --- Props from Laravel ---
+interface Props {
+    timetable: Record<string, DbClass[]>;
+}
+
+// --- Interfaces for UI Logic ---
 interface ClassTime {
     day: string;
     startTime: string;
@@ -19,12 +36,6 @@ interface Class {
     description: string;
 }
 
-interface DaySchedule {
-    day: string;
-    fullDay: string;
-    classes: { class: Class; timeSlot: ClassTime }[];
-}
-
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Classes',
@@ -32,97 +43,68 @@ const breadcrumbs: BreadcrumbItem[] = [
     }
 ];
 
-export default function Classes() {
+export default function Classes({ timetable = {} }: Props) {
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // Mock data for current term classes with weekly schedule
-    const currentClasses: Class[] = [
-        {
-            id: 1,
-            courseName: "Mathematics",
-            teacher: "Mr. Johnson",
-            color: "bg-blue-100 border-blue-300 text-blue-800",
-            description: "Advanced calculus, algebra, and mathematical analysis",
-            times: [
-                { day: "Monday", startTime: "09:00", endTime: "10:30", room: "LT-201" },
-                { day: "Wednesday", startTime: "09:00", endTime: "10:30", room: "LT-201" },
-                { day: "Friday", startTime: "09:00", endTime: "10:30", room: "LT-201" }
-            ]
-        },
-        {
-            id: 2,
-            courseName: "English Language",
-            teacher: "Mrs. Adams",
-            color: "bg-green-100 border-green-300 text-green-800",
-            description: "Literature analysis and communication skills",
-            times: [
-                { day: "Tuesday", startTime: "11:00", endTime: "12:30", room: "Room-105" },
-                { day: "Thursday", startTime: "11:00", endTime: "12:30", room: "Room-105" }
-            ]
-        },
-        {
-            id: 3,
-            courseName: "Physics",
-            teacher: "Dr. Smith",
-            color: "bg-purple-100 border-purple-300 text-purple-800",
-            description: "Classical mechanics and thermodynamics",
-            times: [
-                { day: "Monday", startTime: "13:00", endTime: "14:30", room: "Lab-B" },
-                { day: "Wednesday", startTime: "13:00", endTime: "14:30", room: "Lab-B" }
-            ]
-        },
-        {
-            id: 4,
-            courseName: "Chemistry",
-            teacher: "Prof. Williams",
-            color: "bg-yellow-100 border-yellow-300 text-yellow-800",
-            description: "Chemical principles and reactions",
-            times: [
-                { day: "Tuesday", startTime: "14:00", endTime: "15:30", room: "Lab-C" },
-                { day: "Thursday", startTime: "14:00", endTime: "15:30", room: "Lab-C" }
-            ]
-        },
-        {
-            id: 5,
-            courseName: "Biology",
-            teacher: "Dr. Brown",
-            color: "bg-red-100 border-red-300 text-red-800",
-            description: "Cellular biology and genetics",
-            times: [
-                { day: "Monday", startTime: "10:30", endTime: "12:00", room: "Lab-A" },
-                { day: "Friday", startTime: "10:30", endTime: "12:00", room: "Lab-A" }
-            ]
-        },
-        {
-            id: 6,
-            courseName: "Computer Science",
-            teacher: "Mr. Davis",
-            color: "bg-indigo-100 border-indigo-300 text-indigo-800",
-            description: "Programming and algorithms",
-            times: [
-                { day: "Thursday", startTime: "09:00", endTime: "12:00", room: "Comp-Lab" }
-            ]
-        },
-        {
-            id: 7,
-            courseName: "Geography",
-            teacher: "Mrs. Green",
-            color: "bg-teal-100 border-teal-300 text-teal-800",
-            description: "Physical and human geography",
-            times: [
-                { day: "Tuesday", startTime: "09:00", endTime: "10:30", room: "Room-203" }
-            ]
-        }
-    ];
+    // CONSTANTS FOR GRID
+    const HOUR_HEIGHT = 120; // 120px per hour = 2px per minute
+    const PIXELS_PER_MINUTE = 2;
+    const START_HOUR = 8; // Schedule starts at 8:00
 
-    // Define all time slots for the week
+    // --- HELPER: Generate Color from Subject Name ---
+    const getSubjectColor = (subject: string) => {
+        const colors = [
+            "bg-blue-100 border-blue-300 text-blue-800",
+            "bg-green-100 border-green-300 text-green-800",
+            "bg-purple-100 border-purple-300 text-purple-800",
+            "bg-yellow-100 border-yellow-300 text-yellow-800",
+            "bg-red-100 border-red-300 text-red-800",
+            "bg-indigo-100 border-indigo-300 text-indigo-800",
+            "bg-teal-100 border-teal-300 text-teal-800",
+            "bg-orange-100 border-orange-300 text-orange-800",
+        ];
+        let hash = 0;
+        for (let i = 0; i < subject.length; i++) {
+            hash = subject.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return colors[Math.abs(hash) % colors.length];
+    };
+
+    // --- TRANSFORM BACKEND DATA TO UI FORMAT ---
+    const currentClasses: Class[] = useMemo(() => {
+        const transformed: Class[] = [];
+        
+        // Loop through the grouped timetable from backend
+        Object.values(timetable).forEach((dayClasses) => {
+            dayClasses.forEach((dbClass) => {
+                transformed.push({
+                    id: dbClass.id,
+                    courseName: dbClass.subject,
+                    // We use grade_level as teacher label since DB lacks teacher column currently
+                    teacher: dbClass.grade_level, 
+                    color: getSubjectColor(dbClass.subject),
+                    description: `${dbClass.subject} class for ${dbClass.grade_level} students.`,
+                    times: [
+                        {
+                            day: dbClass.day,
+                            startTime: dbClass.start_time,
+                            endTime: dbClass.end_time,
+                            room: dbClass.room || 'N/A'
+                        }
+                    ]
+                });
+            });
+        });
+
+        return transformed;
+    }, [timetable]);
+
     const timeSlots = [
         "08:00", "09:00", "10:00", "11:00", "12:00", 
         "13:00", "14:00", "15:00", "16:00", "17:00"
     ];
 
-    // Define week days
     const weekDays = [
         { day: "Monday", fullDay: "Monday" },
         { day: "Tuesday", fullDay: "Tuesday" },
@@ -141,42 +123,35 @@ export default function Classes() {
         setSelectedClass(null);
     };
 
-    // Function to check if a class occurs at a specific day and time
-    const getClassAtTime = (day: string, time: string): { class: Class; timeSlot: ClassTime } | null => {
-        for (const classItem of currentClasses) {
-            for (const timeSlot of classItem.times) {
-                if (timeSlot.day === day && timeSlot.startTime === time) {
-                    return { class: classItem, timeSlot };
-                }
-            }
-        }
-        return null;
+    // Helper: Convert "HH:MM" string to total minutes
+    const parseTime = (timeStr: string): number => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return (hours * 60) + minutes;
     };
 
-    // Calculate duration in hours for styling
+    // Calculate height based on minute duration
     const getDurationHeight = (startTime: string, endTime: string): number => {
-        const start = parseInt(startTime.split(':')[0]);
-        const end = parseInt(endTime.split(':')[0]);
-        const duration = end - start;
-        // Each hour = 80px height
-        return duration * 80;
+        const startTotal = parseTime(startTime);
+        const endTotal = parseTime(endTime);
+        const durationMinutes = endTotal - startTotal;
+        return durationMinutes * PIXELS_PER_MINUTE;
     };
 
-    // Calculate time position for styling
+    // Calculate top position based on minutes from start of day (8:00)
     const getTimePosition = (startTime: string): number => {
-        const hour = parseInt(startTime.split(':')[0]);
-        // 8:00 = 0px, 9:00 = 80px, etc.
-        return (hour - 8) * 80;
+        const startOfDayMinutes = START_HOUR * 60;
+        const currentMinutes = parseTime(startTime);
+        return (currentMinutes - startOfDayMinutes) * PIXELS_PER_MINUTE;
     };
 
-    // Calculate total weekly hours
+    // Calculate total weekly hours for stats
     const totalWeeklyHours = currentClasses.reduce((total, classItem) => {
         return total + classItem.times.reduce((classTotal, timeSlot) => {
-            const start = parseInt(timeSlot.startTime.split(':')[0]);
-            const end = parseInt(timeSlot.endTime.split(':')[0]);
-            return classTotal + (end - start);
+            const startTotal = parseTime(timeSlot.startTime);
+            const endTotal = parseTime(timeSlot.endTime);
+            return classTotal + ((endTotal - startTotal) / 60);
         }, 0);
-    }, 0);
+    }, 0).toFixed(1);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -186,7 +161,7 @@ export default function Classes() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-[#37368b] mb-2">Class Timetable</h1>
-                    <p className="text-gray-600">Your weekly schedule for SS3 First Term 2023/2024</p>
+                    <p className="text-gray-600">Your weekly schedule for the current session</p>
                 </div>
 
                 {/* Statistics */}
@@ -200,11 +175,11 @@ export default function Classes() {
                         <div className="text-sm text-gray-600">Weekly Hours</div>
                     </div>
                     <div className="bg-white rounded-xl p-4 shadow-lg text-center border border-gray-200">
-                        <div className="text-2xl font-bold text-[#37368b]">5</div>
-                        <div className="text-sm text-gray-600">Days per Week</div>
+                        <div className="text-2xl font-bold text-[#37368b]">{Object.keys(timetable).length}</div>
+                        <div className="text-sm text-gray-600">Active Days</div>
                     </div>
                     <div className="bg-white rounded-xl p-4 shadow-lg text-center border border-gray-200">
-                        <div className="text-2xl font-bold text-[#37368b]">21</div>
+                        <div className="text-2xl font-bold text-[#37368b]">N/A</div>
                         <div className="text-sm text-gray-600">Total Credits</div>
                     </div>
                 </div>
@@ -216,15 +191,15 @@ export default function Classes() {
                         <h2 className="text-xl font-bold text-white">Weekly Class Schedule</h2>
                     </div>
 
-                    {/* Timetable */}
-                    <div className="p-4">
-                        <div className="flex">
+                    {/* Timetable Scroll Container */}
+                    <div className="p-4 overflow-x-auto">
+                        <div className="flex min-w-[800px]">
                             {/* Time Column */}
-                            <div className="w-20 flex-shrink-0">
-                                <div className="h-12"></div> {/* Header spacer */}
+                            <div className="w-20 flex-shrink-0 pt-12">
                                 {timeSlots.map((time, index) => (
-                                    <div key={index} className="h-20 border-b border-gray-200 flex items-center justify-center">
-                                        <span className="text-sm text-gray-600 font-medium">{time}</span>
+                                    <div key={index} className="relative flex items-start justify-center border-r border-gray-200" style={{ height: `${HOUR_HEIGHT}px` }}>
+                                        <span className="text-sm text-gray-600 font-bold -mt-3 bg-white px-1 z-10">{time}</span>
+                                        {/* Optional: Add small tick marks for 10 min intervals on the axis if needed */}
                                     </div>
                                 ))}
                             </div>
@@ -233,24 +208,39 @@ export default function Classes() {
                             <div className="flex-1 grid grid-cols-5">
                                 {/* Day Headers */}
                                 {weekDays.map((day, index) => (
-                                    <div key={index} className="border-b border-gray-200">
-                                        <div className="h-12 flex items-center justify-center bg-gray-50">
+                                    <div key={index} className="border-r border-gray-200 last:border-r-0">
+                                        <div className="h-12 flex items-center justify-center bg-gray-50 border-b border-gray-200">
                                             <h3 className="font-bold text-[#37368b]">{day.day}</h3>
                                         </div>
-                                        {/* Time slots for each day */}
-                                        <div className="relative" style={{ height: `${timeSlots.length * 80}px` }}>
-                                            {/* Time slot backgrounds */}
+                                        
+                                        {/* Time slots container */}
+                                        <div className="relative" style={{ height: `${timeSlots.length * HOUR_HEIGHT}px` }}>
+                                            
+                                            {/* BACKGROUND GRID: 1 Hour Blocks with 6 invisible 10-min demarcations */}
                                             {timeSlots.map((time, timeIndex) => (
                                                 <div 
                                                     key={timeIndex} 
-                                                    className={`absolute w-full h-20 border-b border-gray-100 ${
-                                                        timeIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                                                    }`}
-                                                    style={{ top: `${timeIndex * 80}px` }}
-                                                ></div>
+                                                    className="absolute w-full border-b border-gray-200 box-border"
+                                                    style={{ 
+                                                        top: `${timeIndex * HOUR_HEIGHT}px`,
+                                                        height: `${HOUR_HEIGHT}px`
+                                                    }}
+                                                >
+                                                    {/* The 6 invisible demarcations (10 mins each) */}
+                                                    <div className="h-full w-full flex flex-col">
+                                                        {[...Array(6)].map((_, i) => (
+                                                            <div 
+                                                                key={i} 
+                                                                className="flex-1 border-b border-gray-50 last:border-b-0" 
+                                                                // Use border-gray-50 for "invisible" but structurally present lines
+                                                                // Change to border-dashed border-gray-200 for visible dotted lines
+                                                            ></div>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             ))}
                                             
-                                            {/* Classes */}
+                                            {/* Classes Rendering */}
                                             {currentClasses.map((classItem) => {
                                                 return classItem.times
                                                     .filter(timeSlot => timeSlot.day === day.day)
@@ -262,21 +252,27 @@ export default function Classes() {
                                                             <div
                                                                 key={`${classItem.id}-${slotIndex}`}
                                                                 onClick={() => openClassModal(classItem)}
-                                                                className={`absolute left-1 right-1 rounded-lg border p-2 cursor-pointer transition-all hover:shadow-md ${classItem.color}`}
+                                                                className={`absolute left-1 right-1 rounded-md border p-2 cursor-pointer transition-all hover:shadow-lg hover:z-20 ${classItem.color}`}
                                                                 style={{
                                                                     top: `${topPosition}px`,
                                                                     height: `${height}px`,
                                                                     zIndex: 10
                                                                 }}
                                                             >
-                                                                <div className="font-semibold text-sm truncate">{classItem.courseName}</div>
-                                                                <div className="text-xs text-gray-600">
+                                                                <div className="font-bold text-xs md:text-sm truncate leading-tight">{classItem.courseName}</div>
+                                                                <div className="text-[10px] md:text-xs opacity-80 mt-1">
                                                                     {timeSlot.startTime} - {timeSlot.endTime}
+                                                                </div>
+                                                                <div className="text-[10px] md:text-xs font-mono mt-1 opacity-75">
+                                                                    {timeSlot.room}
                                                                 </div>
                                                             </div>
                                                         );
                                                     });
                                             })}
+
+                                            {/* Current Time Indicator (Optional Visual) */}
+                                            {/* You could calculate current time position here */}
                                         </div>
                                     </div>
                                 ))}
@@ -297,10 +293,10 @@ export default function Classes() {
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <h5 className="text-gray-700 font-medium">{classItem.courseName}</h5>
+                                        <h5 className="font-bold">{classItem.courseName}</h5>
                                     </div>
                                 </div>
-                                <p className="text-sm text-gray-600 mb-3">{classItem.teacher}</p>
+                                <p className="text-sm opacity-80 mb-3">{classItem.teacher}</p>
                                 <div className="space-y-1">
                                     {classItem.times.map((timeSlot, index) => (
                                         <div key={index} className="flex justify-between text-sm">
@@ -317,18 +313,18 @@ export default function Classes() {
 
             {/* Class Details Modal */}
             {isModalOpen && selectedClass && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
                         {/* Modal Header */}
-                        <div className={`px-6 py-4 rounded-t-2xl ${selectedClass.color.replace('bg-', 'bg-').replace('border-', 'border-')}`}>
+                        <div className={`px-6 py-4 rounded-t-2xl ${selectedClass.color}`}>
                             <div className="flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-xl font-bold">{selectedClass.courseCode}</h3>
-                                    <p className="text-sm opacity-90">{selectedClass.courseName}</p>
+                                    <h3 className="text-xl font-bold">{selectedClass.courseName}</h3>
+                                    <p className="text-sm opacity-90">{selectedClass.teacher}</p>
                                 </div>
                                 <button
                                     onClick={closeModal}
-                                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                                    className="p-1 hover:bg-black/10 rounded-full transition-colors"
                                 >
                                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -338,47 +334,20 @@ export default function Classes() {
                         </div>
 
                         {/* Modal Content */}
-                        <div className="p-6">
-                            {/* Class Info */}
-                            <div className="mb-6">
-                                <h4 className="font-semibold text-[#37368b] mb-3">Class Information</h4>
-                                <div className="space-y-2">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Teacher:</span>
-                                        <span className="font-medium">{selectedClass.teacher}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Credits:</span>
-                                        <span className="font-medium">{selectedClass.credits}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Weekly Hours:</span>
-                                        <span className="font-medium">
-                                            {selectedClass.times.reduce((total, timeSlot) => {
-                                                const start = parseInt(timeSlot.startTime.split(':')[0]);
-                                                const end = parseInt(timeSlot.endTime.split(':')[0]);
-                                                return total + (end - start);
-                                            }, 0)} hours
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
+                        <div className="p-6 space-y-6">
+                            
                             {/* Schedule */}
-                            <div className="mb-6">
-                                <h4 className="font-semibold text-[#37368b] mb-3">Weekly Schedule</h4>
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Weekly Schedule</h4>
                                 <div className="space-y-2">
                                     {selectedClass.times.map((timeSlot, index) => (
-                                        <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                                            <div>
-                                                <span className="font-medium">{timeSlot.day}</span>
-                                                <div className="text-sm text-gray-600">{timeSlot.room}</div>
+                                        <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                            <div className="flex items-center gap-3">
+                                                <span className="font-bold text-[#37368b] w-24">{timeSlot.day}</span>
+                                                <span className="text-sm text-gray-600 bg-white px-2 py-1 rounded border border-gray-200">{timeSlot.room}</span>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="font-medium">{timeSlot.startTime} - {timeSlot.endTime}</div>
-                                                <div className="text-sm text-gray-600">
-                                                    {parseInt(timeSlot.endTime.split(':')[0]) - parseInt(timeSlot.startTime.split(':')[0])} hours
-                                                </div>
+                                            <div className="font-mono text-sm font-medium">
+                                                {timeSlot.startTime} - {timeSlot.endTime}
                                             </div>
                                         </div>
                                     ))}
@@ -386,29 +355,21 @@ export default function Classes() {
                             </div>
 
                             {/* Description */}
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <h4 className="font-semibold text-[#37368b] mb-2">Course Description</h4>
-                                <p className="text-gray-700">{selectedClass.description}</p>
+                            <div>
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Description</h4>
+                                <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                    {selectedClass.description}
+                                </p>
                             </div>
-                        </div>
 
-                        {/* Modal Footer */}
-                        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-                            <div className="flex justify-between items-center">
-                                <div className="text-sm text-gray-600">
-                                    {selectedClass.times.length} sessions per week
-                                </div>
-                                <div className="flex space-x-3">
-                                    <button
-                                        onClick={closeModal}
-                                        className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
-                                    >
-                                        Close
-                                    </button>
-                                    <button className="bg-yellow-500 text-gray-900 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-colors">
-                                        View Materials
-                                    </button>
-                                </div>
+                            {/* Modal Footer */}
+                            <div className="flex gap-3 pt-2">
+                                <button className="flex-1 bg-[#37368b] text-white py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 transition-all">
+                                    View Materials
+                                </button>
+                                <button onClick={closeModal} className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg font-bold hover:bg-gray-50 transition-colors">
+                                    Close
+                                </button>
                             </div>
                         </div>
                     </div>

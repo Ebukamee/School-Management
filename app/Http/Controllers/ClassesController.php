@@ -36,27 +36,33 @@ class ClassesController extends Controller
     /**
      * Store a newly created class in storage.
      */
+
     public function store(Request $request)
     {
-        // 1. Validate Input
-        $request->validate([
-            'subject' => 'required|string|max:255',
-            'grade_level' => 'required|string|max:50',
-            'day' => 'required|string',
-            'start_time' => 'required',
-            'end_time' => 'required',
+        $validated = $request->validate([
+            'grade_level' => 'required|string',
+            'classes' => 'required|array|min:1', // Must be an array
+            'classes.*.subject' => 'required|string',
+            'classes.*.day' => 'required|string',
+            'classes.*.start_time' => 'required',
+            'classes.*.end_time' => 'required',
+            'classes.*.room' => 'nullable|string',
+        ], [
+            'classes.*.subject.required' => 'All added periods must have a subject.',
+            'classes.*.day.required' => 'Day is missing.',
         ]);
 
-        // 2. Save to Database
-        SchoolClass::create([
-            'subject' => $request->subject,
-            'grade_level' => $request->grade_level,
-            'day' => $request->day,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
-        ]);
+        foreach ($request->classes as $cls) {
+            SchoolClass::create([
+                'grade_level' => $request->grade_level, 
+                'subject' => $cls['subject'],
+                'day' => $cls['day'],
+                'start_time' => $cls['start_time'],
+                'end_time' => $cls['end_time'],
+                'room' => $cls['room'] ?? null,
+            ]);
+        }
 
-        // 3. Redirect back to Timetable
-        return redirect()->route('classes.index')->with('success', 'Class added successfully!');
+        return redirect()->route('classes.index')->with('success', 'Timetable saved successfully!');
     }
 }
