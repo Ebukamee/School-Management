@@ -12,11 +12,9 @@ interface ClassTime {
 
 interface Class {
     id: number;
-    courseCode: string;
     courseName: string;
     teacher: string;
     times: ClassTime[];
-    credits: number;
     color: string;
     description: string;
 }
@@ -42,10 +40,8 @@ export default function Classes() {
     const currentClasses: Class[] = [
         {
             id: 1,
-            courseCode: "MAT-401",
             courseName: "Mathematics",
             teacher: "Mr. Johnson",
-            credits: 3,
             color: "bg-blue-100 border-blue-300 text-blue-800",
             description: "Advanced calculus, algebra, and mathematical analysis",
             times: [
@@ -56,10 +52,8 @@ export default function Classes() {
         },
         {
             id: 2,
-            courseCode: "ENG-402",
             courseName: "English Language",
             teacher: "Mrs. Adams",
-            credits: 3,
             color: "bg-green-100 border-green-300 text-green-800",
             description: "Literature analysis and communication skills",
             times: [
@@ -69,10 +63,8 @@ export default function Classes() {
         },
         {
             id: 3,
-            courseCode: "PHY-403",
             courseName: "Physics",
             teacher: "Dr. Smith",
-            credits: 4,
             color: "bg-purple-100 border-purple-300 text-purple-800",
             description: "Classical mechanics and thermodynamics",
             times: [
@@ -82,10 +74,8 @@ export default function Classes() {
         },
         {
             id: 4,
-            courseCode: "CHE-404",
             courseName: "Chemistry",
             teacher: "Prof. Williams",
-            credits: 4,
             color: "bg-yellow-100 border-yellow-300 text-yellow-800",
             description: "Chemical principles and reactions",
             times: [
@@ -95,10 +85,8 @@ export default function Classes() {
         },
         {
             id: 5,
-            courseCode: "BIO-405",
             courseName: "Biology",
             teacher: "Dr. Brown",
-            credits: 4,
             color: "bg-red-100 border-red-300 text-red-800",
             description: "Cellular biology and genetics",
             times: [
@@ -108,10 +96,8 @@ export default function Classes() {
         },
         {
             id: 6,
-            courseCode: "CSC-406",
             courseName: "Computer Science",
             teacher: "Mr. Davis",
-            credits: 3,
             color: "bg-indigo-100 border-indigo-300 text-indigo-800",
             description: "Programming and algorithms",
             times: [
@@ -120,10 +106,8 @@ export default function Classes() {
         },
         {
             id: 7,
-            courseCode: "GEO-407",
             courseName: "Geography",
             teacher: "Mrs. Green",
-            credits: 2,
             color: "bg-teal-100 border-teal-300 text-teal-800",
             description: "Physical and human geography",
             times: [
@@ -285,9 +269,7 @@ export default function Classes() {
                                                                     zIndex: 10
                                                                 }}
                                                             >
-                                                                <div className="font-semibold text-sm truncate">{classItem.courseCode}</div>
-                                                                <div className="text-xs truncate">{classItem.courseName}</div>
-                                                                <div className="text-xs mt-1">{timeSlot.room}</div>
+                                                                <div className="font-semibold text-sm truncate">{classItem.courseName}</div>
                                                                 <div className="text-xs text-gray-600">
                                                                     {timeSlot.startTime} - {timeSlot.endTime}
                                                                 </div>
@@ -315,10 +297,8 @@ export default function Classes() {
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <h4 className="font-bold text-lg">{classItem.courseCode}</h4>
                                         <h5 className="text-gray-700 font-medium">{classItem.courseName}</h5>
                                     </div>
-                                    <span className="text-sm font-semibold text-[#37368b]">{classItem.credits} credits</span>
                                 </div>
                                 <p className="text-sm text-gray-600 mb-3">{classItem.teacher}</p>
                                 <div className="space-y-1">
