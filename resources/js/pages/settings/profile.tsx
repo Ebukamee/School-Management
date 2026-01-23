@@ -35,7 +35,8 @@ export default function Profile({
         email: auth.user.email,
         phone: auth.user.phone || '',
         address: auth.user.address || '',
-        class_level: auth.user.class_level || '',
+        class: auth.user.class || '',
+        form: auth.user.form || '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -116,17 +117,43 @@ export default function Profile({
                         </div>
 
                         {/* Class / Grade Level */}
-                        <div className="grid gap-2">
-                            <Label htmlFor="class_level">Class / Grade</Label>
-                            <Input
-                                id="class_level"
-                                className="mt-1 block w-full"
-                                value={data.class_level}
-                                onChange={(e) => setData('class_level', e.target.value)}
-                                placeholder="e.g. SS3"
-                            />
-                            <InputError className="mt-2" message={errors.class_level} />
-                        </div>
+                      <div className="grid gap-2">
+    <Label htmlFor="class_level">Form</Label>
+    <select
+        id="class_level"
+        className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-[#37368b] focus:outline-none focus:ring-1 focus:ring-[#37368b] transition-all"
+        value={data.form}
+        onChange={(e) => setData('form', e.target.value)}
+    >
+        <option value="">Select a Form</option>
+        <optgroup label="Junior Secondary">
+            <option value="JSS1">JSS1</option>
+            <option value="JSS2">JSS2</option>
+            <option value="JSS3">JSS3</option>
+        </optgroup>
+        <optgroup label="Senior Secondary">
+            <option value="SSS1">SSS1</option>
+            <option value="SSS2">SSS2</option>
+            <option value="SSS3">SSS3</option>
+        </optgroup>
+    </select>
+     <Label htmlFor="class_level">Class</Label>
+    <select
+        id="class_level"
+        className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-[#37368b] focus:outline-none focus:ring-1 focus:ring-[#37368b] transition-all"
+        value={data.class}
+        onChange={(e) => setData('class', e.target.value)}
+    >
+        <option value="">Select a Class</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+
+    </select>
+    <InputError className="mt-2" message={errors.class_level} />
+</div>
 
                         {/* --- NEW FIELDS END --- */}
 

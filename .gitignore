@@ -26,3 +26,43 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+# Build & Cache
+/bootstrap/cache
+/storage/logs
+/storage/framework
+.vite
+
+# IDE/Editors
+/.vscode
+/.idea
+/.nova
+/.zed
+/.fleet
+*.swp
+*.swo
+*~
+
+# Dependencies
+/node_modules
+/vendor
+
+# Environment
+.env*
+!.env.example
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Testing
+/tests/Feature/Auth (if you want to ignore tests locally)
+coverage/
+.coverage
+
+# Misc
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.php-cs-fixer.cache
+.phpstan.cache
+*.log

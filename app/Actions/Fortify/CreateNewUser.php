@@ -36,7 +36,6 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
             'role' => $input['role'],
             'reg_number' => $input['reg_number'],
-            'class' => $input['class'],
         ]);
     }
 }
