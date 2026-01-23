@@ -5,6 +5,7 @@ use App\Http\Controllers\ClassesController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
+use App\Models\SchoolClass;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -16,8 +17,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
 });
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+   Route::get('/dashboard', function () {
+        $user = auth()->user();
+        $today = date('l'); // Gets current day, e.g., "Monday"
+
+        // Fetch classes for Today + User's Grade Level
+        $todaysClasses = SchoolClass::where('day', $today)
+            // Matches the user's class (e.g., SS3)
+            ->orderBy('start_time')
+            ->get();
+
+        return Inertia::render('dashboard', [
+            'todaysClasses' => $todaysClasses
+        ]);
     })->name('dashboard');
    Route::get('results', [ResultsController::class, 'index'])->name('results.index');
     Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');

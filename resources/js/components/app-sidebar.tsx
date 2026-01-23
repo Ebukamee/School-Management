@@ -109,17 +109,7 @@ export function AppSidebar() {
                     <NavUser />
                 </div>
                 
-                {/* Fun decorative element */}
-                <div className="mt-4 pt-4 border-t border-[#37368b]/10">
-                    <div className="flex justify-center space-x-2">
-                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-[#37368b] rounded-full animate-bounce delay-150"></div>
-                        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce delay-300"></div>
-                    </div>
-                    <p className="text-center text-xs text-[#37368b]/60 mt-2 font-medium">
-                        Learning is Fun! 🎓
-                    </p>
-                </div>
+              
             </SidebarFooter>
         </Sidebar>
     );

@@ -28,15 +28,19 @@ export default function Profile({
 }) {
     const { auth } = usePage<SharedData>().props;
 
+    // 1. Updated Form State to include new fields
+    // We use "class_level" because "class" is a reserved word in code
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: auth.user.name,
         email: auth.user.email,
+        phone: auth.user.phone || '',
+        address: auth.user.address || '',
+        class_level: auth.user.class_level || '',
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        // REPLACED: route('profile.update') -> '/profile'
-        patch('/profile'); 
+        patch('/settings/profile'); 
     };
 
     return (
@@ -47,13 +51,13 @@ export default function Profile({
                 <div className="space-y-6">
                     <HeadingSmall
                         title="Profile information"
-                        description="Update your name and email address"
+                        description="Update your personal details"
                     />
 
                     <form onSubmit={submit} className="space-y-6">
+                        {/* Name */}
                         <div className="grid gap-2">
                             <Label htmlFor="name">Name</Label>
-
                             <Input
                                 id="name"
                                 className="mt-1 block w-full"
@@ -63,13 +67,12 @@ export default function Profile({
                                 autoComplete="name"
                                 placeholder="Full name"
                             />
-
                             <InputError className="mt-2" message={errors.name} />
                         </div>
 
+                        {/* Email */}
                         <div className="grid gap-2">
                             <Label htmlFor="email">Email address</Label>
-
                             <Input
                                 id="email"
                                 type="email"
@@ -80,16 +83,58 @@ export default function Profile({
                                 autoComplete="username"
                                 placeholder="Email address"
                             />
-
                             <InputError className="mt-2" message={errors.email} />
                         </div>
+
+                        {/* --- NEW FIELDS START --- */}
+
+                        {/* Phone Number */}
+                        <div className="grid gap-2">
+                            <Label htmlFor="phone">Phone Number</Label>
+                            <Input
+                                id="phone"
+                                type="tel"
+                                className="mt-1 block w-full"
+                                value={data.phone}
+                                onChange={(e) => setData('phone', e.target.value)}
+                                placeholder="e.g. 08012345678"
+                            />
+                            <InputError className="mt-2" message={errors.phone} />
+                        </div>
+
+                        {/* Address */}
+                        <div className="grid gap-2">
+                            <Label htmlFor="address">Address</Label>
+                            <Input
+                                id="address"
+                                className="mt-1 block w-full"
+                                value={data.address}
+                                onChange={(e) => setData('address', e.target.value)}
+                                placeholder="e.g. 12 School Road, Lagos"
+                            />
+                            <InputError className="mt-2" message={errors.address} />
+                        </div>
+
+                        {/* Class / Grade Level */}
+                        <div className="grid gap-2">
+                            <Label htmlFor="class_level">Class / Grade</Label>
+                            <Input
+                                id="class_level"
+                                className="mt-1 block w-full"
+                                value={data.class_level}
+                                onChange={(e) => setData('class_level', e.target.value)}
+                                placeholder="e.g. SS3"
+                            />
+                            <InputError className="mt-2" message={errors.class_level} />
+                        </div>
+
+                        {/* --- NEW FIELDS END --- */}
 
                         {mustVerifyEmail && auth.user.email_verified_at === null && (
                             <div>
                                 <p className="-mt-4 text-sm text-muted-foreground">
                                     Your email address is unverified.{' '}
                                     <Link
-                                        // REPLACED: route('verification.send') -> Standard Laravel URL
                                         href="/email/verification-notification"
                                         method="post"
                                         as="button"

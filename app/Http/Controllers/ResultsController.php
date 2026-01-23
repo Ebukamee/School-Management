@@ -47,18 +47,17 @@ class ResultsController extends Controller
         ]);
 
         // 2. Find the Student Account using the Reg Number
-        // This is the Critical Fix: We get the student's ID, not the teacher's ID.
         $student = User::where('reg_number', $request->reg_number)->first();
 
         // 3. Create the main Result Record assigned to the Student
         $result = Results::create([
-            'user_id' => $student->id,      // <--- FIXED: Assigns result to Student
+            'user_id' => $student->id,    
             'reg_number' => $request->reg_number,
             'class' => $request->class,
             'term' => $request->term,
             'remark' => $request->remark,
             'session' => $request->sess,
-            'created_by' => auth()->id(),   // Tracks which teacher uploaded it
+            'created_by' => auth()->id(),  
         ]);
 
         // 4. Loop through subjects and calculate Grade
