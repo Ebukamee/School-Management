@@ -1,7 +1,7 @@
 import React from 'react';
-import { useForm, Head } from '@inertiajs/react';
+import { useForm, Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, SharedData } from '@/types';
 import { 
     Save, 
     Plus, 
@@ -18,7 +18,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Create', href: '/results/create' }
 ];
 
-// ... (Utility functions: getSessionOptions, getCurrentSession, getCurrentTerm remain the same) ...
+
 const getSessionOptions = () => {
     const currentYear = new Date().getFullYear();
     const options = [];
@@ -28,6 +28,8 @@ const getSessionOptions = () => {
     }
     return options.reverse();
 };
+
+
 
 const getCurrentSession = () => {
     const now = new Date();
@@ -60,9 +62,10 @@ type FormData = {
 };
 
 const CreateResult: React.FC = () => {
+  // const {auth} = usePage<SharedData>().props;
     const { data, setData, post, processing, errors, setError, clearErrors } = useForm<FormData>({
         reg_number: '',
-        class: '',
+        class:'',
         term: getCurrentTerm(),
         remark: '',
         sess: getCurrentSession(),
@@ -170,6 +173,7 @@ const CreateResult: React.FC = () => {
                                         onChange={e => setData('class', e.target.value)}
                                         className={inputClass}
                                         placeholder="e.g. SS1"
+                                        disabled
                                     />
                                     {errors.class && <p className="text-red-500 text-xs mt-1">{errors.class}</p>}
                                 </div>

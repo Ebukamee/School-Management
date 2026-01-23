@@ -46,10 +46,26 @@ class ResultsController extends Controller
             'subjects' => 'required|array',
         ]);
 
-        // 2. Find the Student Account using the Reg Number
+        // Find the Student Account using the Reg Number
         $student = User::where('reg_number', $request->reg_number)->first();
-
-        // 3. Create the main Result Record assigned to the Student
+        // Guarding against unauthorized access
+$teacher = auth()->user();
+if ($teacher->role == 'teacher') {
+    if ($teacher->form !== $student->form || $teacher->class !== $student->class) {
+        throw ValidationException::withMessages([
+            'reg_number' => [
+                "Unauthorized: You teach {$teacher->form} {$teacher->class}, but this student is in {$student->form} {$student->class}."
+            ],
+        ]);
+    }
+} else {
+    throw ValidationException::withMessages([
+            'reg_number' => [
+                "Unauthorized: Only teachers can create results."
+            ],
+        ]);
+}
+        //Create the main Result Record assigned to the Student
         $result = Results::create([
             'user_id' => $student->id,    
             'reg_number' => $request->reg_number,
