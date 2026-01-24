@@ -157,18 +157,93 @@ public function manage(Request $request)
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Results $results)
+   public function edit($id)
     {
-        //
+        $user = auth()->user();
+        
+        // 1. Load the Result, the Student, AND the existing Subjects/Scores
+        $result = Results::with(['student', 'subjects'])->findOrFail($id);
+
+        // 2. SECURITY: Prevent teachers from editing others' results
+        if ($user->role === 'teacher' && $result->created_by !== $user->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // 3. Return the data to the Edit Form
+        return Inertia::render('results/edit', [
+            'result' => $result
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Results $results)
-    {
-        //
+   public function update(Request $request, $id)
+{
+    $user = auth()->user();
+    $result = \App\Models\Results::findOrFail($id);
+
+    // 1. SECURITY CHECK
+    if ($user->role === 'teacher' && $result->created_by !== $user->id) {
+        abort(403, 'Unauthorized action.');
     }
+
+    // 2. VALIDATION (Fixed)
+    // We removed 'subjects.*.id' => 'required' to allow new subjects
+    $validated = $request->validate([
+        'remark'                => 'nullable|string',
+        'subjects'              => 'required|array',
+        'subjects.*.ca_score'   => 'required|numeric|min:0|max:40',
+        'subjects.*.exam_score' => 'required|numeric|min:0|max:60',
+        // Optional: validate name only if it's present (for new subjects)
+        'subjects.*.name'       => 'nullable|string',
+    ]);
+
+    // 3. UPDATE PARENT DETAILS
+    $result->update([
+        'remark' => $request->remark,
+    ]);
+
+    // 4. LOOP THROUGH SUBJECTS
+    foreach ($request->subjects as $sub) {
+        
+        // Calculate Score & Grade
+        $total = $sub['ca_score'] + $sub['exam_score'];
+        $grade = $this->getGrade($total);
+
+        // LOGIC: Check if this is an Existing Subject (Has ID) or New (No ID)
+        if (isset($sub['id']) && $sub['id']) {
+            
+            // --- A. UPDATE EXISTING ---
+            // We use the ID to find the specific row to update
+            $result->subjects()
+                ->where('id', $sub['id']) 
+                ->update([
+                    'ca_score'   => $sub['ca_score'],
+                    'exam_score' => $sub['exam_score'],
+                    'total'      => $total,
+                    'grade'      => $grade,
+                ]);
+
+        } else {
+
+            // --- B. CREATE NEW ---
+            // No ID means it's a new row added in the frontend.
+            // Note: Frontend sends 'name', DB expects 'subject_name'
+            $result->subjects()->create([
+                'subject_name' => $sub['name'], 
+                'ca_score'     => $sub['ca_score'],
+                'exam_score'   => $sub['exam_score'],
+                'total'        => $total,
+                'grade'        => $grade,
+            ]);
+        }
+    }
+
+    // 5. REDIRECT
+    return to_route('results.manage')
+        ->with('success', 'Result updated successfully!');
+}
 
     /**
      * Remove the specified resource from storage.

@@ -36,7 +36,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 Route::middleware(['auth', 'teacher'])->group(function () {
 Route::get('/results/manage', [ResultsController::class, 'manage'])->name('results.manage');
-    // Route::get('/results/create', [ResultsController::class, 'create']);
+    Route::get('/results/{id}/edit', [ResultsController::class, 'edit'])->name('results.edit');
+    Route::put('/results/{id}', [ResultsController::class, 'update'])->name('results.update');
     Route::get('classes/create', [ClassesController::class, 'create'])->name('classes.create');
     Route::post('classes', [ClassesController::class, 'store'])->name('classes.store');
     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
