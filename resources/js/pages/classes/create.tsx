@@ -143,7 +143,7 @@ export default function CreateClass() {
                         <label className="block text-sm font-bold text-gray-700 mb-1">Target Class / Grade <span className="text-red-500">*</span></label>
                         <input 
                             type="text" 
-                            placeholder="e.g. SS3 Science"
+                            disabled
                             value={data.grade_level}
                             onChange={e => setData('grade_level', e.target.value)}
                             className={`w-full border-gray-300 rounded-lg focus:border-[#37368b] focus:ring-[#37368b] ${errors.grade_level ? 'border-red-500' : ''}`}

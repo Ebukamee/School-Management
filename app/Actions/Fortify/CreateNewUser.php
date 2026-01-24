@@ -28,6 +28,7 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::unique(User::class),
             ],
             'password' => $this->passwordRules(),
+            'reg_number' => ['required_if:role,student', 'string', 'max:20', 'unique:users'],
         ])->validate();
 
         return User::create([
@@ -35,7 +36,7 @@ class CreateNewUser implements CreatesNewUsers
             'email' => $input['email'],
             'password' => $input['password'],
             'role' => $input['role'],
-            'reg_number' => $input['reg_number'],
+            'reg_number' => ($input['role'] === 'student') ? $input['reg_number'] : null
         ]);
     }
 }

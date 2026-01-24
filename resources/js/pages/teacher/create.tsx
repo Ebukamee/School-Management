@@ -173,7 +173,6 @@ const CreateResult: React.FC = () => {
                                         onChange={e => setData('class', e.target.value)}
                                         className={inputClass}
                                         placeholder="e.g. SS1"
-                                        disabled
                                     />
                                     {errors.class && <p className="text-red-500 text-xs mt-1">{errors.class}</p>}
                                 </div>

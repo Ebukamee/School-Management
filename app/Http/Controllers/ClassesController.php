@@ -12,13 +12,13 @@ class ClassesController extends Controller
     /**
      * Display the Timetable.
      */
-    
+
     public function index()
     {
         $user = auth()->user();
         $classes = SchoolClass::orderBy('start_time')
-        ->where('grade_level', $user->form . $user->class) // Filter by user's class level
-        ->get();
+            ->where('grade_level', $user->form . $user->class) // Filter by user's class level
+            ->get();
 
         // 2. Group them by 'day' (e.g., 'Monday' => [...classes])
         // This makes it easy to map columns in the frontend
@@ -55,20 +55,27 @@ class ClassesController extends Controller
             'classes.*.subject.required' => 'All added periods must have a subject.',
             'classes.*.day.required' => 'Day is missing.',
         ]);
-$user = auth()->user();
-if ($user->role !== 'admin' && $user->role !== 'teacher') {
+
+
+        // Authorization: Only Admins and Teachers can create timetables
+        $user = auth()->user();
+        if ($user->role !== 'admin' && $user->role !== 'teacher') {
             return redirect()->back()->withErrors(['unauthorized' => 'You do not have permission to perform this action.']);
         }
+
+        // Teachers can only create for their assigned class
         if ($user->form . $user->class !== $request->grade_level) {
-             throw ValidationException::withMessages([
-                    'reg_number' => [
-                        "Unauthorized: You can only create timetables for your assigned class {$user->form} {$user->class}."
-                    ],
-                ]);
+            throw ValidationException::withMessages([
+                'reg_number' => [
+                    "Unauthorized: You can only create timetables for your assigned class {$user->form} {$user->class}."
+                ],
+            ]);
         }
+
+        // Save each class entry
         foreach ($request->classes as $cls) {
             SchoolClass::create([
-                'grade_level' => $request->grade_level, 
+                'grade_level' => $request->grade_level,
                 'subject' => $cls['subject'],
                 'day' => $cls['day'],
                 'start_time' => $cls['start_time'],

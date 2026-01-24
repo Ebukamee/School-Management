@@ -13,11 +13,18 @@ class TeacherOnly
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
-    {
-        if(auth()->User()->role!=='teacher') {
-            abort(code: 403,message: 'unauthorized');
-        }
-        return $next($request);
+   public function handle(Request $request, Closure $next): Response
+{
+    // Check if they are logged in!
+    if (!auth()->check()) {
+        return redirect('/login');
     }
+
+    // Check if the logged-in user is a teacher
+    if (auth()->user()->role !== 'teacher') {
+        abort(403, 'Unauthorized');
+    }
+
+    return $next($request);
+}
 }

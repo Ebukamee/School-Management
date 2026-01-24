@@ -12,19 +12,18 @@ Route::get('/', function () {
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('home');
-Route::post('results', [ResultsController::class, 'store'])->middleware(['auth', 'verified'])->name('results.store');
-Route::middleware(['auth'])->group(function () {
-    Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
-});
+// Route::middleware(['auth'])->group(function () {
+//     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
+// });
 Route::middleware(['auth', 'verified'])->group(function () {
-   Route::get('/dashboard', function () {
+    Route::get('/dashboard', function () {
         $user = auth()->user();
-        $today = date('l'); // Gets current day, e.g., "Monday"
+        $today = date('l');
 
         // Fetch classes for Today + User's Grade Level
         $todaysClasses = SchoolClass::where('day', $today)
             // Matches the user's class (e.g., SS3)
-            // ->where('grade_level', $user->class_level)
+            ->where('grade_level', $user->form . $user->class)
             ->orderBy('start_time')
             ->get();
 
@@ -32,9 +31,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'todaysClasses' => $todaysClasses
         ]);
     })->name('dashboard');
-   Route::get('results', [ResultsController::class, 'index'])->name('results.index');
+    Route::get('results', [ResultsController::class, 'index'])->name('results.index');
     Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');
+});
+Route::middleware(['auth', 'teacher'])->group(function () {
+Route::get('/results/manage', [ResultsController::class, 'manage'])->name('results.manage');
+    // Route::get('/results/create', [ResultsController::class, 'create']);
     Route::get('classes/create', [ClassesController::class, 'create'])->name('classes.create');
     Route::post('classes', [ClassesController::class, 'store'])->name('classes.store');
+    Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
+    Route::post('results', [ResultsController::class, 'store'])->middleware(['auth', 'verified'])->name('results.store');
+
 });
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

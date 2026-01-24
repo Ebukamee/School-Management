@@ -72,23 +72,23 @@ export default function Register() {
                                 <Input
                                     id="reg_number"
                                     type="text"
-                                    required
                                     tabIndex={2}
                                     name="reg_number"
                                     placeholder="Input the Student's Registration Number"
                                     className="border-2 border-[#37368b] focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 rounded-2xl px-4 py-3 text-lg transition-all duration-300 hover:shadow-lg"
                                 />
-                                <InputError message={errors.email} />
+                                <InputError message={errors.reg_number} />
                             </div>
                               <div className="grid gap-3">
                                 <Label htmlFor="email" className="text-[#37368b] font-bold text-lg">
-                                    Registration Number
+                                    Role
                                 </Label>
                                 <select name="role" id="role" required className="border-2 border-[#37368b] focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400 rounded-2xl px-4 py-3 text-lg transition-all duration-300 hover:shadow-lg">
                                     <option value="teacher">Teacher</option>
                                     <option value="student">Student</option>
                                     <option value="admin">School Adminstrator</option>
                                 </select>
+                                <InputError message={errors.role} />
                             </div>
                             {/* Password Input with Fun Styling */}
                             <div className="grid gap-3">

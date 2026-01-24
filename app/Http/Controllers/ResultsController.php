@@ -49,6 +49,8 @@ class ResultsController extends Controller
 
         // Find the Student Account using the Reg Number
         $student = User::where('reg_number', $request->reg_number)->first();
+
+
         // Guarding against unauthorized access
         $teacher = auth()->user();
         if ($teacher->role == 'teacher') {
@@ -60,10 +62,12 @@ class ResultsController extends Controller
                 ]);
             }
         } else {
-             return redirect()->back()->withErrors([
-                    "Unauthorized" => "Only teachers can create results."
-                ]);
+            return redirect()->back()->withErrors([
+                "Unauthorized" => "Only teachers can create results."
+            ]);
         }
+
+
         //Create the main Result Record assigned to the Student
         $result = Results::create([
             'user_id' => $student->id,
@@ -111,10 +115,40 @@ class ResultsController extends Controller
             return 'E';
         return 'F';
     }
+public function manage(Request $request)
+{
+    $user = auth()->user();
+    $query = Results::with('student');
 
-    /**
-     * Display the specified resource.
-     */
+    // 1. ALWAYS filter by the Teacher (Security)
+    if ($user->role === 'teacher') {
+        $query->where('created_by', $user->id);
+    }
+
+    // 2. APPLY FILTERS (Directly from the URL/Request)
+    // We use "filled" to check if value exists and is not empty
+    if ($request->filled('session')) {
+        $query->where('session', $request->input('session'));
+    }
+
+    if ($request->filled('term')) {
+        $query->where('term', $request->input('term'));
+    }
+
+    if ($request->filled('class')) {
+        $query->where('class', $request->input('class'));
+    }
+
+    // 3. GET RESULTS
+    // If no filters were "filled", this returns ALL results for that teacher.
+    $results = $query->latest()->get();
+
+    return Inertia::render('results/manage', [
+        'results' => $results,
+        // Pass the CURRENT URL params back to React so the dropdowns stay selected
+        'filters' => $request->only(['session', 'term', 'class']),
+    ]);
+}
     public function show(Results $results)
     {
         //
