@@ -6,6 +6,7 @@ use App\Models\Results;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Validation\ValidationException;
 
 class ResultsController extends Controller
 {
@@ -16,9 +17,9 @@ class ResultsController extends Controller
     {
         // Show results that belong to the currently logged-in user (Student)
         $results = Results::where('user_id', auth()->id())
-                    ->with('subjects')
-                    ->orderBy('term')
-                    ->get();
+            ->with('subjects')
+            ->orderBy('term')
+            ->get();
 
         return Inertia::render('results/index', ['results' => $results]);
     }
@@ -49,36 +50,34 @@ class ResultsController extends Controller
         // Find the Student Account using the Reg Number
         $student = User::where('reg_number', $request->reg_number)->first();
         // Guarding against unauthorized access
-$teacher = auth()->user();
-if ($teacher->role == 'teacher') {
-    if ($teacher->form !== $student->form || $teacher->class !== $student->class) {
-        throw ValidationException::withMessages([
-            'reg_number' => [
-                "Unauthorized: You teach {$teacher->form} {$teacher->class}, but this student is in {$student->form} {$student->class}."
-            ],
-        ]);
-    }
-} else {
-    throw ValidationException::withMessages([
-            'reg_number' => [
-                "Unauthorized: Only teachers can create results."
-            ],
-        ]);
-}
+        $teacher = auth()->user();
+        if ($teacher->role == 'teacher') {
+            if ($teacher->form !== $student->form || $teacher->class !== $student->class) {
+                throw ValidationException::withMessages([
+                    'reg_number' => [
+                        "Unauthorized: You teach {$teacher->form} {$teacher->class}, but this student is in {$student->form} {$student->class}."
+                    ],
+                ]);
+            }
+        } else {
+             return redirect()->back()->withErrors([
+                    "Unauthorized" => "Only teachers can create results."
+                ]);
+        }
         //Create the main Result Record assigned to the Student
         $result = Results::create([
-            'user_id' => $student->id,    
+            'user_id' => $student->id,
             'reg_number' => $request->reg_number,
             'class' => $request->class,
             'term' => $request->term,
             'remark' => $request->remark,
             'session' => $request->sess,
-            'created_by' => auth()->id(),  
+            'created_by' => auth()->id(),
         ]);
 
         // 4. Loop through subjects and calculate Grade
         foreach ($request->subjects as $sub) {
-            
+
             // Calculate total first
             $total = $sub['ca_score'] + $sub['exam_score'];
 
@@ -100,11 +99,16 @@ if ($teacher->role == 'teacher') {
     // --- Helper Function to Determine Grade ---
     private function getGrade($score)
     {
-        if ($score >= 70) return 'A';
-        if ($score >= 60) return 'B';
-        if ($score >= 50) return 'C';
-        if ($score >= 45) return 'D';
-        if ($score >= 40) return 'E';
+        if ($score >= 70)
+            return 'A';
+        if ($score >= 60)
+            return 'B';
+        if ($score >= 50)
+            return 'C';
+        if ($score >= 45)
+            return 'D';
+        if ($score >= 40)
+            return 'E';
         return 'F';
     }
 

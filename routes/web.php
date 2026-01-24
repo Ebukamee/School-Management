@@ -24,6 +24,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Fetch classes for Today + User's Grade Level
         $todaysClasses = SchoolClass::where('day', $today)
             // Matches the user's class (e.g., SS3)
+            // ->where('grade_level', $user->class_level)
             ->orderBy('start_time')
             ->get();
 

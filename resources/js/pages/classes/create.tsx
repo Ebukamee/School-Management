@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { useForm, Head } from '@inertiajs/react';
+import { useForm, Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Classes', href: '/classes' },
@@ -36,10 +36,10 @@ const generateTimeSlots = () => {
 
 export default function CreateClass() {
     const timeSlots = useMemo(() => generateTimeSlots(), []);
-    
+    const { auth } = usePage<SharedData>().props
     // --- FORM STATE ---
     const { data, setData, post, processing, errors } = useForm({
-        grade_level: '',
+        grade_level: `${auth.user.form}${auth.user.class}`|| "",
         classes: [] as any[] 
     });
 
