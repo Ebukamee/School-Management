@@ -53,7 +53,7 @@ export function AppSidebar() {
                 icon: BarChart3,
                 items: [
                     { title: 'Create Result', href: '/results/create', icon: PlusCircle },
-                    { title: 'Update Results', href: '/results', icon: FileEdit },
+                    { title: 'Update Results', href: '/results/manage', icon: FileEdit },
                 ],
             }
         ] : [

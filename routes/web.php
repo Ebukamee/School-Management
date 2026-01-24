@@ -31,7 +31,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'todaysClasses' => $todaysClasses
         ]);
     })->name('dashboard');
-    Route::get('results', [ResultsController::class, 'index'])->name('results.index');
+    Route::middleware(['auth', 'student'])->group(function () {
+            Route::get('results', [ResultsController::class, 'index'])->name('results.index');
+    });
     Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');
 });
 Route::middleware(['auth', 'teacher'])->group(function () {
