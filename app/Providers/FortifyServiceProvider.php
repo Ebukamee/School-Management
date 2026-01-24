@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use App\Models\RegNumber;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -28,6 +29,18 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Fortify::registerView(function () {
+            
+            // 1. Get the next available number
+            $nextAvailable = RegNumber::where('is_used', false)
+                ->orderBy('id', 'asc')
+                ->first();
+
+            // 2. Pass it to the React Page
+            return Inertia::render('register', [
+                'nextAvailableReg' => $nextAvailable ? $nextAvailable->reg_number : null
+            ]);
+        });
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
