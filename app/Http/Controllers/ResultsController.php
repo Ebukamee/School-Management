@@ -181,7 +181,7 @@ public function manage(Request $request)
    public function update(Request $request, $id)
 {
     $user = auth()->user();
-    $result = \App\Models\Results::findOrFail($id);
+    $result = Results::findOrFail($id);
 
     // 1. SECURITY CHECK
     if ($user->role === 'teacher' && $result->created_by !== $user->id) {

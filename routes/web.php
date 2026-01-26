@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HomeWorkController;
 use App\Http\Controllers\ResultsController;
 use App\Http\Controllers\RegNumberController;
 use App\Models\RegNumber;
@@ -13,17 +14,22 @@ Route::get('/', function () {
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
     ]);
+
+
+
 })->name('home');
 Route::get('/register', function () {
-   $nextAvailable = RegNumber::where('is_used', false)
-                ->orderBy('id', 'asc')
-                ->first();
+    $nextAvailable = RegNumber::where('is_used', false)
+        ->orderBy('id', 'asc')
+        ->first();
 
-            // 2. Pass it to the React Page
-            return Inertia::render('auth/register', [
-                'nextAvailableReg' => $nextAvailable ? $nextAvailable->reg_number : null
-            ]);
+    // 2. Pass it to the React Page
+    return Inertia::render('auth/register', [
+        'nextAvailableReg' => $nextAvailable ? $nextAvailable->reg_number : null
+    ]);
 })->name('register');
+
+
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
 // });
@@ -47,9 +53,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('results', [ResultsController::class, 'index'])->name('results.index');
     });
     Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');
-});
+});Route::get('/homework/{id}', [HomeWorkController::class, 'show'])->name('homework.show');
+Route::get('/homework', [HomeWorkController::class, 'index'])->name('homework.index');
 Route::middleware(['auth', 'teacher'])->group(function () {
     Route::get('/allowed-numbers', [RegNumberController::class, 'index'])->name('reg_numbers.index');
+    Route::get('/homework/create', [HomeWorkController::class, 'create'])->name('homework.create');
+    Route::post('/homework', [HomeWorkController::class, 'store'])->name('homework.store');
     Route::post('/allowed-numbers', [RegNumberController::class, 'store'])->name('reg_numbers.store');
     Route::delete('/allowed-numbers/{id}', [RegNumberController::class, 'destroy'])->name('reg_numbers.destroy');
     Route::get('/allowed-numbers/create', [RegNumberController::class, 'create'])->name('reg_numbers.create');
