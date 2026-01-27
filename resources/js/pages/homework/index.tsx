@@ -72,15 +72,9 @@ export default function HomeworkIndex({ homeworks }: Props) {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Homework Board</h1>
-                        <p className="text-sm text-gray-500 mt-1">Manage and track assignments across all classes.</p>
+                        <p className="text-sm text-gray-500 mt-1">View your homeworks and assignment.</p>
                     </div>
-                    <Link
-                        href="/homework/create"
-                        className="inline-flex items-center justify-center gap-2 bg-[#37368b] hover:bg-[#2a2970] text-white px-5 py-2.5 rounded-lg font-semibold text-sm shadow-md transition-all hover:-translate-y-0.5"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Assign Homework
-                    </Link>
+                    
                 </div>
 
                 {/* Filters Bar */}

@@ -63,7 +63,7 @@ export default function Show({ homework }: Props) {
         >
             <Head title={homework.title} />
 
-            <div className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-6xl w-full mx-auto py-8 px-4 sm:px-6 lg:px-8">
                 
                 {/* Back Button */}
                 <div className="mb-6">
@@ -183,27 +183,6 @@ export default function Show({ homework }: Props) {
                             </div>
                         </div>
 
-                        {/* Admin Actions */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Actions</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <Link 
-                                    href={`/homework/${homework.id}/edit`}
-                                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-300 transition-colors"
-                                >
-                                    <Edit className="w-4 h-4" />
-                                    Edit
-                                </Link>
-                                <button 
-                                    onClick={handleDelete}
-                                    disabled={processing}
-                                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-red-50 text-red-600 border border-red-100 font-semibold hover:bg-red-100 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
 
                     </div>
                 </div>

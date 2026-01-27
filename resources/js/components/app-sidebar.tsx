@@ -85,7 +85,7 @@ export function AppSidebar() {
                 items: [
                     { title: 'View Homework', href: '/homework', icon: List }, // <-- Allows visiting /homework
                     { title: 'Create Homework', href: '/homework/create', icon: PlusCircle },
-                    { title: 'Update Homework', href: '/homework/update', icon: FileEdit },
+                    { title: 'Manage Homework', href: '/homework/manage', icon: FileEdit },
                 ],
             }
         ] : [

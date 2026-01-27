@@ -4,6 +4,7 @@ use App\Http\Controllers\HomeWorkController;
 use App\Http\Controllers\ResultsController;
 use App\Http\Controllers\RegNumberController;
 use App\Models\RegNumber;
+use App\Models\HomeWork;
 use App\Http\Controllers\ClassesController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -29,7 +30,29 @@ Route::get('/register', function () {
     ]);
 })->name('register');
 
+Route::get('/schedule', function () {
+    $today = date('l');
 
+    // Concatenate form and class exactly as you had it (e.g., "JSS1A")
+    $gradeLevel = auth()->user()->form . auth()->user()->class;
+
+    $classes = SchoolClass::where('grade_level', $gradeLevel)
+        ->where('day', $today)
+        ->orderBy('start_time')
+        ->get();
+
+    $homeworks = HomeWork::where('form', auth()->user()->form)
+        ->where('class', auth()->user()->class)
+        ->whereDate('due_date', now()) 
+        ->orderBy('title', 'asc')    
+        ->get();
+
+    // Kept your requested path: 'schedule/index'
+    return Inertia::render('schedule/index', [
+        'classes' => $classes,
+        'homework' => $homeworks
+    ]);
+})->name('schedule');
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
 // });
@@ -37,11 +60,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
         $today = date('l');
+        $gradeLevel = $user->form . $user->class;
 
-        // Fetch classes for Today + User's Grade Level
+        // Fetch classes for today for the user's class level
         $todaysClasses = SchoolClass::where('day', $today)
-            // Matches the user's class (e.g., SS3)
-            ->where('grade_level', $user->form . $user->class)
+            ->where('grade_level', $gradeLevel)
             ->orderBy('start_time')
             ->get();
 
@@ -53,7 +76,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('results', [ResultsController::class, 'index'])->name('results.index');
     });
     Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');
-});Route::get('/homework/{id}', [HomeWorkController::class, 'show'])->name('homework.show');
+});
+// Route::get('/homework/{id}', [HomeWorkController::class, 'show'])->name('homework.show');
 Route::get('/homework', [HomeWorkController::class, 'index'])->name('homework.index');
 Route::middleware(['auth', 'teacher'])->group(function () {
     Route::get('/allowed-numbers', [RegNumberController::class, 'index'])->name('reg_numbers.index');
@@ -69,6 +93,12 @@ Route::middleware(['auth', 'teacher'])->group(function () {
     Route::post('classes', [ClassesController::class, 'store'])->name('classes.store');
     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
     Route::post('results', [ResultsController::class, 'store'])->middleware(['auth', 'verified'])->name('results.store');
-
+   Route::get('/homework/manage', [HomeWorkController::class, 'manage'])->name('homework.manage');
+   Route::get('/homework/{id}/edit', [HomeWorkController::class, 'edit'])->name('homework.edit');
+   Route::put('/homework/{id}', [HomeWorkController::class, 'update'])->name('homework.update');
+    Route::get('/homework/{id}', [HomeWorkController::class, 'show'])->name('homework.show');
+    Route::delete('/homework/{id}', [HomeWorkController::class, 'destroy'])->name('homework.destroy');
 });
+
+
 require __DIR__ . '/settings.php';
