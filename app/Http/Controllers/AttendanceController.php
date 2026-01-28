@@ -36,17 +36,21 @@ class AttendanceController extends Controller
     // 3. KPI Summary (Pie Chart Data)
     $summaryQuery = clone $query;
     $summary = $summaryQuery->select('status', DB::raw('count(*) as total'))
-        ->where('student_id', auth()->user()->id)
+        // ->where('student_id', auth()->user()->id)
     ->groupBy('status')
         ->pluck('total', 'status');
 
 
-    $trendQuery = clone $query;
-    $dailyTrends = $trendQuery->select('date', 'status', DB::raw('count(*) as total'))
-        ->where('student_id', auth()->user()->id)
-    ->groupBy('date', 'status')
-        ->orderBy('date')
-        ->get();
+ $dailyTrends = Attendance::query()
+    // ->where('student_id', auth()->id())
+    // Filter by date range
+    ->whereDate('date', '>=', $startDate)
+    ->whereDate('date', '<=', $endDate)
+    // FORCE MERGE: Squash all times/subjects into just the "Date"
+    ->selectRaw('DATE(date) as date_only, status, count(*) as total')
+    ->groupBy('date_only', 'status')
+    ->orderBy('date_only')
+    ->get();
 
     return Inertia::render('attendance/index', [
         'summary' => $summary,
@@ -151,8 +155,8 @@ public function manage(Request $request)
     
     Attendance::upsert(
         $dataToUpsert, 
-        ['student_id', 'date', 'subject', 'recorded_by'], // The Unique Constraint we added to migration
-        ['status', 'recorded_by', 'updated_at'] // Columns to update
+        ['student_id', 'date', 'subject', 'recorded_by'], 
+        ['status', 'recorded_by', 'updated_at'] 
     );
 
     return redirect()->back()->with('success', 'Attendance Register Saved!');
@@ -170,7 +174,7 @@ public function manage(Request $request)
     // 2. CHECK IF REGISTER EXISTS (The 404 Logic)
     // We check if ANY student in this class has an attendance record 
     // for this specific date and subject.
-    $exists = \App\Models\Attendance::where('date', $request->date)
+    $exists = Attendance::where('date', $request->date)
         ->where('subject', $request->subject)
         ->whereHas('student', function($q) use ($request) {
             $q->where('form', $request->form)

@@ -180,16 +180,13 @@ export default function Stats({
     };
 
     // Bar Data (Trends)
-    const uniqueDates = [
-        ...new Set(dailyTrends.map((item: any) => item.date)),
-    ].sort();
+    // 1. Update unique dates to look for 'date_only'
+const uniqueDates = [...new Set(dailyTrends.map((item: any) => item.date_only))].sort();
 
-    const getCount = (date: any, status: string) => {
-        const found = dailyTrends.find(
-            (d: any) => d.date === date && d.status === status,
-        );
-        return found ? found.total : 0;
-    };
+const getCount = (date: any, status: string) => {
+    const found = dailyTrends.find((d: any) => d.date_only === date && d.status === status);
+    return found ? found.total : 0;
+};
 
     const barData = {
         labels: uniqueDates,
