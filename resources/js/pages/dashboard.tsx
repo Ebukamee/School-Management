@@ -39,10 +39,10 @@ export default function Dashboard() {
     const user = auth.user;
 
     const studentData = {
-        name: user.name.toUpperCase(),
+        name: user.name,
         mobile: user.phone || 'Not Set',
         email: user.email,
-        address: user.address ? user.address.toUpperCase() : 'Not Set',
+        address: user.address ? user.address : 'Not Set',
         RegNo: user.reg_number || 'PENDING',
         feePaid: '411,300 NGN', 
     };
@@ -84,7 +84,7 @@ export default function Dashboard() {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-                        <p className="text-gray-500 text-sm mt-1">Welcome back, {studentData.name}</p>
+                        <p className="text-gray-500 text-sm mt-1">Welcome back, <span className='font-bold text-lg'>{studentData.name}</span> </p>
                     </div>
                     <div className="text-sm font-medium text-gray-500 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm">
                         {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -121,11 +121,10 @@ export default function Dashboard() {
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Address</label>
-                                    <p className="mt-1 text-sm font-medium text-gray-900 truncate" title={studentData.address}>{studentData.address}</p>
+                                    <p className="mt-1 text-sm font-medium text-gray-900 truncate" >{studentData.address}</p>
                                 </div>
                             </div>
                         </div>
-
                          {/* Quick Actions */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {quickActions.map((action, idx) => (

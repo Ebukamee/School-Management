@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\HomeWorkController;
 use App\Http\Controllers\ResultsController;
 use App\Http\Controllers\RegNumberController;
@@ -53,6 +54,11 @@ Route::get('/schedule', function () {
         'homework' => $homeworks
     ]);
 })->name('schedule');
+Route::get('/attendance/create', [App\Http\Controllers\AttendanceController::class, 'create'])->name('attendance.create');
+Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'stats'])->name('attendance.stats');
+Route::post('/attendance', [App\Http\Controllers\AttendanceController::class, 'store'])->name('attendance.store');
+Route::get('/attendance/manage', [AttendanceController::class, 'manage'])->name('attendance.manage');
+Route::get('/attendance/edit', [AttendanceController::class, 'edit'])->name('attendance.edit');
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
 // });

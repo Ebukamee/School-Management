@@ -11,8 +11,9 @@ class HomeWorkController extends Controller
 {
     public function index()
     {
+        $user = auth()->user();
         return Inertia::render('homework/index', [
-            'homeworks' => HomeWork::where('form', auth()->user()->form)->where('class', auth()->user()->class)->paginate(10)
+            'homeworks' => HomeWork::where('form', $user->form)->where('class', $user['class'])->paginate(10)
         ]);
     }
 
