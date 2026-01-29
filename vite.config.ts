@@ -21,6 +21,9 @@ export default defineConfig({
         //     formVariants: true,
         // }),
     ],
+     resolve: {
+        extensions: ['.ts', '.tsx', '.js', '.jsx'],
+    },
     esbuild: {
         jsx: 'automatic',
     },

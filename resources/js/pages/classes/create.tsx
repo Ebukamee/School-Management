@@ -35,7 +35,7 @@ const generateTimeSlots = () => {
 };
 interface FormData {
     grade_level: string;
-    classes: any[]; // It is safer to define this here than casting inline
+    classes: any[];
 }
 
 export default function CreateClass() {
