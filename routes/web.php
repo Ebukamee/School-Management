@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\HomeWorkController;
 use App\Http\Controllers\ResultsController;
 use App\Http\Controllers\RegNumberController;
@@ -54,11 +55,15 @@ Route::get('/schedule', function () {
         'homework' => $homeworks
     ]);
 })->name('schedule');
+Route::post('/blog', [BlogController::class, 'store'])->name('blog.store');
 Route::get('/attendance/create', [App\Http\Controllers\AttendanceController::class, 'create'])->name('attendance.create');
 Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'stats'])->name('attendance.stats');
 Route::post('/attendance', [App\Http\Controllers\AttendanceController::class, 'store'])->name('attendance.store');
 Route::get('/attendance/manage', [AttendanceController::class, 'manage'])->name('attendance.manage');
 Route::get('/attendance/edit', [AttendanceController::class, 'edit'])->name('attendance.edit');
+Route::get('/blog/create', [BlogController::class,'create'])->name('blog.create');
+Route::get('/blog', [BlogController::class,'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class,'show'])->name('blog.show');
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
 // });

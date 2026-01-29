@@ -14,11 +14,11 @@ return new class extends Migration
     Schema::create('blogs', function (Blueprint $table) {
         $table->id();
         $table->string('title');
-        $table->string('slug')->unique(); // For URLs: /blog/my-first-post
+        $table->string('slug')->unique();
         $table->string('cover_image')->nullable();
-        $table->longText('content'); // Use longText for big articles
+        $table->longText('content'); 
         $table->boolean('is_published')->default(false);
-        $table->foreignId('user_id')->constrained()->onDelete('cascade'); // The author
+        $table->foreignId('user_id')->constrained()->onDelete('cascade'); 
         $table->timestamps();
     });
 }
