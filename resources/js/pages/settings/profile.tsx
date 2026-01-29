@@ -33,10 +33,10 @@ export default function Profile({
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
         name: auth.user.name,
         email: auth.user.email,
-        phone: auth.user.phone || '',
-        address: auth.user.address || '',
-        class: auth.user.class || '',
-        form: auth.user.form || '',
+        phone: auth.user.phone as string || '',
+        address: auth.user.address as string|| '',
+        class: auth.user.class as string || '',
+        form: auth.user.form as string || '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -152,7 +152,7 @@ export default function Profile({
             <option value="E">E</option>
 
     </select>
-    <InputError className="mt-2" message={errors.class_level} />
+    <InputError className="mt-2" message={errors.class} />
 </div>
 
                         {/* --- NEW FIELDS END --- */}

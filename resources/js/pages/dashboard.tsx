@@ -40,10 +40,10 @@ export default function Dashboard() {
 
     const studentData = {
         name: user.name,
-        mobile: user.phone || 'Not Set',
+        mobile: user.phone as string || 'Not Set',
         email: user.email,
-        address: user.address ? user.address : 'Not Set',
-        RegNo: user.reg_number || 'PENDING',
+        address: user.address as string || 'Not Set',
+        RegNo: user.reg_number as string || 'PENDING',
         feePaid: '411,300 NGN', 
     };
 

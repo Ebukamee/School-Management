@@ -33,15 +33,20 @@ const generateTimeSlots = () => {
     }
     return slots;
 };
+interface FormData {
+    grade_level: string;
+    classes: any[]; // It is safer to define this here than casting inline
+}
 
 export default function CreateClass() {
     const timeSlots = useMemo(() => generateTimeSlots(), []);
     const { auth } = usePage<SharedData>().props
     // --- FORM STATE ---
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<FormData>({
         grade_level: `${auth.user.form}${auth.user.class}`|| "",
         classes: [] as any[] 
     });
+    
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
