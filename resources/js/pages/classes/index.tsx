@@ -1,7 +1,16 @@
 import { useState, useMemo } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/react';
+import { BreadcrumbItem, SharedData } from '@/types';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { 
+    Calendar, 
+    Clock, 
+    User, 
+    ChevronRight, 
+    Plus,
+    X,
+    BookOpen
+} from 'lucide-react';
 
 // --- Interfaces matching Backend Data ---
 interface DbClass {
@@ -11,7 +20,6 @@ interface DbClass {
     day: string;
     start_time: string;
     end_time: string;
-    room: string | null;
 }
 
 // --- Props from Laravel ---
@@ -24,7 +32,6 @@ interface ClassTime {
     day: string;
     startTime: string;
     endTime: string;
-    room: string;
 }
 
 interface Class {
@@ -44,25 +51,30 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Classes({ timetable = {} }: Props) {
+    // 1. Get User Data correctly from Inertia
+    const { auth } = usePage<SharedData>().props;
+    const user = auth.user;
+    
+    // 2. Guard Logic: Check if user is a student
+    const isStudent = user.role === 'student';
+
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     // CONSTANTS FOR GRID
-    const HOUR_HEIGHT = 120; // 120px per hour = 2px per minute
-    const PIXELS_PER_MINUTE = 2;
-    const START_HOUR = 8; // Schedule starts at 8:00
+    const HOUR_HEIGHT = 100; 
+    const PIXELS_PER_MINUTE = HOUR_HEIGHT / 60;
+    const START_HOUR = 8; 
 
     // --- HELPER: Generate Color from Subject Name ---
     const getSubjectColor = (subject: string) => {
         const colors = [
-            "bg-blue-100 border-blue-300 text-blue-800",
-            "bg-green-100 border-green-300 text-green-800",
-            "bg-purple-100 border-purple-300 text-purple-800",
-            "bg-yellow-100 border-yellow-300 text-yellow-800",
-            "bg-red-100 border-red-300 text-red-800",
-            "bg-indigo-100 border-indigo-300 text-indigo-800",
-            "bg-teal-100 border-teal-300 text-teal-800",
-            "bg-orange-100 border-orange-300 text-orange-800",
+            "bg-blue-50 border-blue-200 text-[#37368b]",
+            "bg-emerald-50 border-emerald-200 text-emerald-700",
+            "bg-amber-50 border-amber-200 text-amber-700",
+            "bg-purple-50 border-purple-200 text-purple-700",
+            "bg-rose-50 border-rose-200 text-rose-700",
+            "bg-cyan-50 border-cyan-200 text-cyan-700",
         ];
         let hash = 0;
         for (let i = 0; i < subject.length; i++) {
@@ -71,33 +83,34 @@ export default function Classes({ timetable = {} }: Props) {
         return colors[Math.abs(hash) % colors.length];
     };
 
-    // --- TRANSFORM BACKEND DATA TO UI FORMAT ---
+    // --- TRANSFORM & GROUP DATA ---
     const currentClasses: Class[] = useMemo(() => {
-        const transformed: Class[] = [];
+        const classMap = new Map<string, Class>();
         
-        // Loop through the grouped timetable from backend
         Object.values(timetable).forEach((dayClasses) => {
             dayClasses.forEach((dbClass) => {
-                transformed.push({
-                    id: dbClass.id,
-                    courseName: dbClass.subject,
-                    // We use grade_level as teacher label since DB lacks teacher column currently
-                    teacher: dbClass.grade_level, 
-                    color: getSubjectColor(dbClass.subject),
-                    description: `${dbClass.subject} class for ${dbClass.grade_level} students.`,
-                    times: [
-                        {
-                            day: dbClass.day,
-                            startTime: dbClass.start_time,
-                            endTime: dbClass.end_time,
-                            room: dbClass.room || 'N/A'
-                        }
-                    ]
+                const key = dbClass.subject;
+
+                if (!classMap.has(key)) {
+                    classMap.set(key, {
+                        id: dbClass.id,
+                        courseName: dbClass.subject,
+                        teacher: dbClass.grade_level, 
+                        color: getSubjectColor(dbClass.subject),
+                        description: `${dbClass.subject} class for ${dbClass.grade_level} students.`,
+                        times: [] 
+                    });
+                }
+
+                classMap.get(key)?.times.push({
+                    day: dbClass.day,
+                    startTime: dbClass.start_time,
+                    endTime: dbClass.end_time,
                 });
             });
         });
 
-        return transformed;
+        return Array.from(classMap.values());
     }, [timetable]);
 
     const timeSlots = [
@@ -123,13 +136,11 @@ export default function Classes({ timetable = {} }: Props) {
         setSelectedClass(null);
     };
 
-    // Helper: Convert "HH:MM" string to total minutes
     const parseTime = (timeStr: string): number => {
         const [hours, minutes] = timeStr.split(':').map(Number);
         return (hours * 60) + minutes;
     };
 
-    // Calculate height based on minute duration
     const getDurationHeight = (startTime: string, endTime: string): number => {
         const startTotal = parseTime(startTime);
         const endTotal = parseTime(endTime);
@@ -137,109 +148,93 @@ export default function Classes({ timetable = {} }: Props) {
         return durationMinutes * PIXELS_PER_MINUTE;
     };
 
-    // Calculate top position based on minutes from start of day (8:00)
     const getTimePosition = (startTime: string): number => {
         const startOfDayMinutes = START_HOUR * 60;
         const currentMinutes = parseTime(startTime);
         return (currentMinutes - startOfDayMinutes) * PIXELS_PER_MINUTE;
     };
 
-    // Calculate total weekly hours for stats
-    const totalWeeklyHours = currentClasses.reduce((total, classItem) => {
-        return total + classItem.times.reduce((classTotal, timeSlot) => {
-            const startTotal = parseTime(timeSlot.startTime);
-            const endTotal = parseTime(timeSlot.endTime);
-            return classTotal + ((endTotal - startTotal) / 60);
-        }, 0);
-    }, 0).toFixed(1);
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Class Timetable" />
+            <Head title="Weekly Class Timetable" />
             
-            <div className="container mx-auto px-4 py-8">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-[#37368b] mb-2">Class Timetable</h1>
-                    <p className="text-gray-600">Your weekly schedule for the current session</p>
+            <div className="w-[90%] mx-auto p-4 md:p-6 lg:p-8">
+                
+                {/* --- HEADER --- */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                            Weekly <span className="text-[#37368b]">Class Timetable</span>
+                        </h1>
+                        <p className="text-gray-500 mt-2 font-medium">
+                            Manage and view your academic schedule for the current term.
+                        </p>
+                    </div>
+                    
+                    {/* GUARD: Only show button if NOT a student */}
+                    {!isStudent && (
+                        <div className="flex gap-3">
+                            <Link href="/classes/create" className="bg-[#37368b] hover:bg-[#2a2970] text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-900/20 transition-all hover:-translate-y-0.5 active:scale-95">
+                                <Plus className="w-5 h-5" />
+                                <span>Build Schedule</span>
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
-                {/* Statistics */}
-                <div className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-                    <div className="bg-white rounded-xl p-4 shadow-lg text-center border border-gray-200">
-                        <div className="text-2xl font-bold text-[#37368b]">{currentClasses.length}</div>
-                        <div className="text-sm text-gray-600">Total Classes</div>
+                {/* --- STATS GRID --- */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
+                        <div className="text-4xl font-extrabold text-[#37368b] mb-1">{currentClasses.length}</div>
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Subjects</div>
                     </div>
-                    <div className="bg-white rounded-xl p-4 shadow-lg text-center border border-gray-200">
-                        <div className="text-2xl font-bold text-[#37368b]">{totalWeeklyHours}</div>
-                        <div className="text-sm text-gray-600">Weekly Hours</div>
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
+                        <div className="text-4xl font-extrabold text-[#ffc53a] mb-1">
+                            {currentClasses.reduce((acc, curr) => acc + curr.times.length, 0)}
+                        </div>
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Weekly Sessions</div>
                     </div>
-                    <div className="bg-white rounded-xl p-4 shadow-lg text-center border border-gray-200">
-                        <div className="text-2xl font-bold text-[#37368b]">{Object.keys(timetable).length}</div>
-                        <div className="text-sm text-gray-600">Active Days</div>
-                    </div>
-                    <div className="bg-white rounded-xl p-4 shadow-lg text-center border border-gray-200">
-                        <div className="text-2xl font-bold text-[#37368b]">N/A</div>
-                        <div className="text-sm text-gray-600">Total Credits</div>
+                    <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center">
+                        <div className="text-4xl font-extrabold text-gray-700 mb-1">5</div>
+                        <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">Days Active</div>
                     </div>
                 </div>
 
-                {/* Timetable Grid */}
-                <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden mb-8">
-                    {/* Header */}
-                    <div className="bg-[#37368b] px-6 py-4">
-                        <h2 className="text-xl font-bold text-white">Weekly Class Schedule</h2>
-                    </div>
-
-                    {/* Timetable Scroll Container */}
-                    <div className="p-4 overflow-x-auto">
-                        <div className="flex min-w-[800px]">
-                            {/* Time Column */}
-                            <div className="w-20 flex-shrink-0 pt-12">
+                {/* --- TIMETABLE GRID --- */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-10 relative">
+                    <div className="overflow-x-auto custom-scrollbar">
+                        <div className="min-w-[1000px] flex">
+                            
+                            {/* Time Axis */}
+                            <div className="w-20 flex-shrink-0 border-r border-gray-100 bg-gray-50/50">
+                                <div className="h-14 border-b border-gray-100"></div>
                                 {timeSlots.map((time, index) => (
-                                    <div key={index} className="relative flex items-start justify-center border-r border-gray-200" style={{ height: `${HOUR_HEIGHT}px` }}>
-                                        <span className="text-sm text-gray-600 font-bold -mt-3 bg-white px-1 z-10">{time}</span>
-                                        {/* Optional: Add small tick marks for 10 min intervals on the axis if needed */}
+                                    <div key={index} className="relative border-b border-gray-100" style={{ height: `${HOUR_HEIGHT}px` }}>
+                                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-1 text-xs font-bold text-gray-400">
+                                            {time}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Days Grid */}
+                            {/* Days Columns */}
                             <div className="flex-1 grid grid-cols-5">
-                                {/* Day Headers */}
-                                {weekDays.map((day, index) => (
-                                    <div key={index} className="border-r border-gray-200 last:border-r-0">
-                                        <div className="h-12 flex items-center justify-center bg-gray-50 border-b border-gray-200">
-                                            <h3 className="font-bold text-[#37368b]">{day.day}</h3>
-                                        </div>
+                                {weekDays.map((day, dayIndex) => (
+                                    <div key={dayIndex} className="border-r border-gray-100 last:border-r-0">
                                         
-                                        {/* Time slots container */}
+                                        {/* Day Header */}
+                                        <div className="h-14 flex items-center justify-center border-b border-gray-100 bg-gray-50/30">
+                                            <h3 className="font-bold text-gray-700 uppercase text-xs tracking-wider">{day.day}</h3>
+                                        </div>
+
+                                        {/* Day Content */}
                                         <div className="relative" style={{ height: `${timeSlots.length * HOUR_HEIGHT}px` }}>
                                             
-                                            {/* BACKGROUND GRID: 1 Hour Blocks with 6 invisible 10-min demarcations */}
-                                            {timeSlots.map((time, timeIndex) => (
-                                                <div 
-                                                    key={timeIndex} 
-                                                    className="absolute w-full border-b border-gray-200 box-border"
-                                                    style={{ 
-                                                        top: `${timeIndex * HOUR_HEIGHT}px`,
-                                                        height: `${HOUR_HEIGHT}px`
-                                                    }}
-                                                >
-                                                    {/* The 6 invisible demarcations (10 mins each) */}
-                                                    <div className="h-full w-full flex flex-col">
-                                                        {[...Array(6)].map((_, i) => (
-                                                            <div 
-                                                                key={i} 
-                                                                className="flex-1 border-b border-gray-50 last:border-b-0" 
-                                                                // Use border-gray-50 for "invisible" but structurally present lines
-                                                                // Change to border-dashed border-gray-200 for visible dotted lines
-                                                            ></div>
-                                                        ))}
-                                                    </div>
-                                                </div>
+                                            {/* Background Lines */}
+                                            {timeSlots.map((_, i) => (
+                                                <div key={i} className="absolute w-full border-b border-gray-50" style={{ top: `${i * HOUR_HEIGHT}px` }}></div>
                                             ))}
-                                            
+
                                             {/* Classes Rendering */}
                                             {currentClasses.map((classItem) => {
                                                 return classItem.times
@@ -252,27 +247,33 @@ export default function Classes({ timetable = {} }: Props) {
                                                             <div
                                                                 key={`${classItem.id}-${slotIndex}`}
                                                                 onClick={() => openClassModal(classItem)}
-                                                                className={`absolute left-1 right-1 rounded-md border p-2 cursor-pointer transition-all hover:shadow-lg hover:z-20 ${classItem.color}`}
+                                                                className={`
+                                                                    absolute left-1 right-1 rounded-xl border p-2 cursor-pointer 
+                                                                    transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:z-20
+                                                                    flex flex-col justify-center
+                                                                    ${classItem.color}
+                                                                `}
                                                                 style={{
                                                                     top: `${topPosition}px`,
                                                                     height: `${height}px`,
                                                                     zIndex: 10
                                                                 }}
                                                             >
-                                                                <div className="font-bold text-xs md:text-sm truncate leading-tight">{classItem.courseName}</div>
-                                                                <div className="text-[10px] md:text-xs opacity-80 mt-1">
-                                                                    {timeSlot.startTime} - {timeSlot.endTime}
-                                                                </div>
-                                                                <div className="text-[10px] md:text-xs font-mono mt-1 opacity-75">
-                                                                    {timeSlot.room}
+                                                                <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-current opacity-20"></div>
+                                                                
+                                                                <div className="pl-2">
+                                                                    <div className="font-bold text-xs md:text-sm leading-tight mb-0.5 truncate">
+                                                                        {classItem.courseName}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1 text-[10px] opacity-80 font-mono">
+                                                                        <Clock className="w-3 h-3" />
+                                                                        {timeSlot.startTime}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         );
                                                     });
                                             })}
-
-                                            {/* Current Time Indicator (Optional Visual) */}
-                                            {/* You could calculate current time position here */}
                                         </div>
                                     </div>
                                 ))}
@@ -281,27 +282,43 @@ export default function Classes({ timetable = {} }: Props) {
                     </div>
                 </div>
 
-                {/* Class List Summary */}
-                <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-                    <h3 className="text-xl font-bold text-[#37368b] mb-4">Current Term Classes</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {currentClasses.map((classItem) => (
+                {/* --- SUBJECT LIST (Summary) --- */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-indigo-50 text-[#37368b] rounded-xl">
+                            <BookOpen className="w-5 h-5" />
+                        </div>
+                        {/* Dynamic Name */}
+                        <h2 className="text-xl font-bold text-gray-900">{`Subjects for ${user.form} ${user.class}`}</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {currentClasses.map((classItem, idx) => (
                             <div 
-                                key={classItem.id}
+                                key={`${classItem.id}-${idx}`}
                                 onClick={() => openClassModal(classItem)}
-                                className={`border rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow ${classItem.color} hover:opacity-90`}
+                                className="group border border-gray-100 rounded-2xl p-5 hover:border-gray-200 hover:shadow-md transition-all cursor-pointer bg-white"
                             >
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h5 className="font-bold">{classItem.courseName}</h5>
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${classItem.color}`}>
+                                            {classItem.courseName.substring(0, 2).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 group-hover:text-[#37368b] transition-colors">
+                                                {classItem.courseName}
+                                            </h4>
+                                            <p className="text-xs text-gray-500 font-mono">{classItem.teacher}</p>
+                                        </div>
                                     </div>
+                                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#37368b] transition-colors" />
                                 </div>
-                                <p className="text-sm opacity-80 mb-3">{classItem.teacher}</p>
-                                <div className="space-y-1">
-                                    {classItem.times.map((timeSlot, index) => (
-                                        <div key={index} className="flex justify-between text-sm">
-                                            <span>{timeSlot.day}:</span>
-                                            <span className="font-medium">{timeSlot.startTime} - {timeSlot.endTime}</span>
+                                
+                                <div className="space-y-2 mt-4 pt-4 border-t border-gray-50">
+                                    {classItem.times.map((time, tIdx) => (
+                                        <div key={tIdx} className="flex justify-between text-xs text-gray-500">
+                                            <span className="font-bold text-gray-700">{time.day}</span>
+                                            <span className="font-mono bg-gray-50 px-2 py-0.5 rounded">{time.startTime} - {time.endTime}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -309,45 +326,42 @@ export default function Classes({ timetable = {} }: Props) {
                         ))}
                     </div>
                 </div>
+
             </div>
 
-            {/* Class Details Modal */}
+            {/* --- DETAILS MODAL --- */}
             {isModalOpen && selectedClass && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-                        {/* Modal Header */}
-                        <div className={`px-6 py-4 rounded-t-2xl ${selectedClass.color}`}>
-                            <div className="flex justify-between items-center">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-gray-900/30 backdrop-blur-sm transition-opacity" onClick={closeModal}></div>
+                    
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden animate-in zoom-in-95 duration-200">
+                        {/* Header */}
+                        <div className={`px-8 py-6 ${selectedClass.color.split(' ')[0]} bg-opacity-30`}>
+                            <div className="flex justify-between items-start">
                                 <div>
-                                    <h3 className="text-xl font-bold">{selectedClass.courseName}</h3>
-                                    <p className="text-sm opacity-90">{selectedClass.teacher}</p>
+                                    <h3 className="text-2xl font-extrabold text-gray-900 mb-1">{selectedClass.courseName}</h3>
+                                    <p className="text-sm font-medium opacity-70 flex items-center gap-1.5">
+                                        <User className="w-3.5 h-3.5" />
+                                        {selectedClass.teacher}
+                                    </p>
                                 </div>
-                                <button
-                                    onClick={closeModal}
-                                    className="p-1 hover:bg-black/10 rounded-full transition-colors"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
+                                <button onClick={closeModal} className="bg-white/50 hover:bg-white p-2 rounded-full transition-colors text-gray-700">
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
 
-                        {/* Modal Content */}
-                        <div className="p-6 space-y-6">
-                            
-                            {/* Schedule */}
+                        {/* Body */}
+                        <div className="p-8 space-y-6">
+                            {/* Schedule List */}
                             <div>
-                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Weekly Schedule</h4>
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Weekly Schedule</h4>
                                 <div className="space-y-2">
-                                    {selectedClass.times.map((timeSlot, index) => (
-                                        <div key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    {selectedClass.times.map((slot, i) => (
+                                        <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                            <span className="font-bold text-gray-700 text-sm">{slot.day}</span>
                                             <div className="flex items-center gap-3">
-                                                <span className="font-bold text-[#37368b] w-24">{timeSlot.day}</span>
-                                                <span className="text-sm text-gray-600 bg-white px-2 py-1 rounded border border-gray-200">{timeSlot.room}</span>
-                                            </div>
-                                            <div className="font-mono text-sm font-medium">
-                                                {timeSlot.startTime} - {timeSlot.endTime}
+                                                <span className="text-xs font-mono text-gray-500">{slot.startTime} - {slot.endTime}</span>
                                             </div>
                                         </div>
                                     ))}
@@ -356,20 +370,10 @@ export default function Classes({ timetable = {} }: Props) {
 
                             {/* Description */}
                             <div>
-                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Description</h4>
-                                <p className="text-gray-700 leading-relaxed bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Details</h4>
+                                <p className="text-sm text-gray-600 leading-relaxed">
                                     {selectedClass.description}
                                 </p>
-                            </div>
-
-                            {/* Modal Footer */}
-                            <div className="flex gap-3 pt-2">
-                                <button className="flex-1 bg-[#37368b] text-white py-2.5 rounded-lg font-bold shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 transition-all">
-                                    View Materials
-                                </button>
-                                <button onClick={closeModal} className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg font-bold hover:bg-gray-50 transition-colors">
-                                    Close
-                                </button>
                             </div>
                         </div>
                     </div>

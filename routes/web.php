@@ -5,6 +5,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\HomeWorkController;
 use App\Http\Controllers\ResultsController;
 use App\Http\Controllers\RegNumberController;
+use App\Models\Blog;
 use App\Models\RegNumber;
 use App\Models\HomeWork;
 use App\Http\Controllers\ClassesController;
@@ -78,9 +79,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->where('grade_level', $gradeLevel)
             ->orderBy('start_time')
             ->get();
+        $info = Blog::get();
 
         return Inertia::render('dashboard', [
-            'todaysClasses' => $todaysClasses
+            'todaysClasses' => $todaysClasses,
+            'blogs' => $info
         ]);
     })->name('dashboard');
     Route::middleware(['auth', 'student'])->group(function () {
