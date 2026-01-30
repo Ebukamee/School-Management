@@ -64,7 +64,7 @@ Route::get('/attendance/manage', [AttendanceController::class, 'manage'])->name(
 Route::get('/attendance/edit', [AttendanceController::class, 'edit'])->name('attendance.edit');
 Route::get('/blog/create', [BlogController::class,'create'])->name('blog.create');
 Route::get('/blog', [BlogController::class,'index'])->name('blog.index');
-Route::get('/blog/{slug}', [BlogController::class,'show'])->name('blog.show');
+
 // Route::middleware(['auth'])->group(function () {
 //     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
 // });
@@ -86,12 +86,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'blogs' => $info
         ]);
         
+        
     })->name('dashboard');
     Route::middleware(['auth', 'student'])->group(function () {
         Route::get('results', [ResultsController::class, 'index'])->name('results.index');
     });
     Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');
 });
+Route::middleware(['auth'])->group(function () {
+    Route::get('/blog/drafts', [BlogController::class, 'drafts'])->name('blog.drafts');
+    Route::get('/blog/manage', [BlogController::class, 'manage'])->name('blog.manage');
+    Route::delete('/blog/{slug}', [BlogController::class, 'destroy'])->name('blog.destroy');
+     
+    Route::get('/blog/{slug}/edit', [BlogController::class, 'edit'])->name('blog.edit');
+    
+    Route::put('/blog/{slug}', [BlogController::class, 'update'])->name('blog.update');
+
+});
+Route::get('/blog/{slug}', [BlogController::class,'show'])->name('blog.show');
 Route::put('/allowed-numbers/{reg_number}', [RegNumberController::class, 'update'])
     ->name('reg_numbers.update');
 // Route::get('/homework/{id}', [HomeWorkController::class, 'show'])->name('homework.show');
