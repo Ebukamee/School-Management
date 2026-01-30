@@ -61,10 +61,25 @@ class RegNumberController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, RegNumber $regNumber)
-    {
-        //
-    }
+   public function update(Request $request, $regNumber)
+{
+    // 1. Find the record using the string passed from the URL
+    // We use where('reg_number', ...) because the frontend is sending the string ID
+    $record = RegNumber::where('reg_number', $regNumber)->firstOrFail();
+
+    // 2. Validate the incoming data
+    $validated = $request->validate([
+        'is_used' => 'required|boolean',
+    ]);
+
+    // 3. Update the database
+    $record->update([
+        'is_used' => $validated['is_used']
+    ]);
+
+    // 4. Return back to the frontend to trigger 'onSuccess'
+    return back()->with('success', 'Registration number status updated.');
+}
 
     /**
      * Remove the specified resource from storage.

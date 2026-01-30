@@ -54,7 +54,7 @@ export default function Schedule({ classes, homework }: Props) {
                 <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-                            <span className="p-2.5 bg-[#37368b] text-white rounded-xl shadow-lg shadow-indigo-900/20">
+                            <span className="p-2.5 bg-[#ffc53a] text-white rounded-xl shadow-lg shadow-indigo-900/20">
                                 <Calendar className="w-6 h-6" />
                             </span>
                             Today's <span className="text-[#37368b]">Overview</span>

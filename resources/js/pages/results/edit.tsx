@@ -6,10 +6,14 @@ import {
     User, 
     BookOpen, 
     FileText,
-    AlertCircle,
     ArrowLeft,
-    Plus,       // Added
-    Trash2      // Added
+    Plus,
+    Trash2,
+    Hash,
+    Layers,
+    Clock,
+    Calendar,
+    AlertCircle
 } from 'lucide-react';
 
 // --- Types ---
@@ -37,7 +41,7 @@ interface ResultProp {
 }
 
 interface FormSubject {
-    id?: number; // <--- CHANGED: id is optional now (undefined for new rows)
+    id?: number; 
     name: string;
     ca_score: number;
     exam_score: number;
@@ -73,21 +77,17 @@ const EditResult: React.FC<Props> = ({ result }) => {
         })),
     });
 
-    // --- NEW FUNCTIONS ---
     const addSubject = () => {
         setData('subjects', [
             ...data.subjects,
-            { name: '', ca_score: 0, exam_score: 0 } // No ID passed here
+            { name: '', ca_score: 0, exam_score: 0 } 
         ]);
     };
 
     const removeSubject = (index: number) => {
-        // Optional: You might want to prevent deleting existing DB subjects here, 
-        // or handle deletions in the backend. For now, we allow UI removal.
         const updatedSubjects = data.subjects.filter((_, i) => i !== index);
         setData('subjects', updatedSubjects);
     };
-    // ---------------------
 
     const breadcrumbs = [
         { title: 'Results', href: '/results/manage' },
@@ -113,29 +113,34 @@ const EditResult: React.FC<Props> = ({ result }) => {
         put(`/results/${result.id}`);
     };
 
-    const inputClass = "w-full border-gray-200 bg-gray-50/50 rounded-lg focus:border-[#37368b] focus:ring-[#37368b] focus:bg-white transition-all duration-200 text-sm py-2.5 font-medium text-gray-700";
-    const labelClass = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5";
-    const readOnlyInputClass = "w-full border-gray-200 bg-gray-100/80 text-gray-500 rounded-lg text-sm py-2.5 px-3 font-mono cursor-not-allowed border";
+    // --- STYLES ---
+    const inputClass = "w-full border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-700 focus:border-[#37368b] focus:ring-1 focus:ring-[#37368b] bg-white transition-all shadow-sm hover:border-gray-300 placeholder-gray-300 outline-none";
+    const readOnlyInputClass = "w-full border-gray-200 bg-gray-50 text-gray-500 rounded-xl text-sm py-2.5 px-4 font-mono font-medium cursor-not-allowed border shadow-sm";
+    const labelClass = "block text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-2 ml-1 flex items-center gap-1.5";
+    const iconContainerClass = "p-2 bg-blue-50 text-[#37368b] rounded-lg";
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit Result" />
 
-            <div className="max-w-5xl w-full mx-auto py-8 px-4 sm:px-6">
+            <div className="w-[90%] mx-auto p-4 md:p-6 lg:p-8">
                 
                 {/* Header */}
-                <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+                            <span className="p-2.5 bg-[#ffc53a] text-white rounded-xl shadow-lg shadow-indigo-900/20">
+                                <FileText className="w-6 h-6" />
+                            </span>
                             Edit Result
                         </h1>
-                        <p className="text-gray-500 mt-1 text-sm">
+                        <p className="text-gray-500 mt-2 font-medium ml-1">
                             Update scores, edit remarks, or add new subjects.
                         </p>
                     </div>
                     <a 
                         href="/results/manage"
-                        className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-[#37368b] transition-colors bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:shadow-md"
+                        className="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#37368b] transition-colors bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-[#37368b]"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Back to Manage
@@ -143,15 +148,17 @@ const EditResult: React.FC<Props> = ({ result }) => {
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                    <div className="space-y-6">
+                    <div className="space-y-8">
                         
                         {/* Section 1: Student Information */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 flex items-center gap-2">
-                                <User className="w-4 h-4 text-[#37368b]" />
-                                <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
+                            <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-3">
+                                <div className={iconContainerClass}>
+                                    <User className="w-5 h-5" />
+                                </div>
+                                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-3">
                                     Student Information 
-                                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide bg-gray-100 text-gray-500 border border-gray-200">
                                         Read Only
                                     </span>
                                 </h2>
@@ -159,19 +166,19 @@ const EditResult: React.FC<Props> = ({ result }) => {
                             
                             <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <div className="col-span-1 md:col-span-2 lg:col-span-1">
-                                    <label className={labelClass}>Reg Number</label>
+                                    <label className={labelClass}><Hash className="w-3 h-3" /> Reg Number</label>
                                     <div className={readOnlyInputClass}>{data.reg_number}</div>
                                 </div>
                                 <div>
-                                    <label className={labelClass}>Class</label>
+                                    <label className={labelClass}><Layers className="w-3 h-3" /> Class</label>
                                     <div className={readOnlyInputClass}>{data.class}</div>
                                 </div>
                                 <div>
-                                    <label className={labelClass}>Term</label>
+                                    <label className={labelClass}><Clock className="w-3 h-3" /> Term</label>
                                     <div className={readOnlyInputClass}>{data.term}</div>
                                 </div>
                                 <div>
-                                    <label className={labelClass}>Session</label>
+                                    <label className={labelClass}><Calendar className="w-3 h-3" /> Session</label>
                                     <div className={readOnlyInputClass}>{data.sess}</div>
                                 </div>
                             </div>
@@ -179,34 +186,32 @@ const EditResult: React.FC<Props> = ({ result }) => {
 
                         {/* Section 2: Academic Record */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/30 flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    <BookOpen className="w-4 h-4 text-[#37368b]" />
-                                    <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">Academic Record</h2>
+                            <div className="px-6 py-4 border-b border-gray-50 flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <div className={iconContainerClass}>
+                                        <BookOpen className="w-5 h-5" />
+                                    </div>
+                                    <h2 className="text-lg font-bold text-gray-900">Academic Record</h2>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={addSubject}
-                                    className="inline-flex items-center gap-1.5 bg-[#37368b]/10 hover:bg-[#37368b]/20 text-[#37368b] px-3 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                                    className="inline-flex items-center gap-1.5 bg-[#37368b]/10 hover:bg-[#37368b]/20 text-[#37368b] px-4 py-2 rounded-lg text-xs font-bold transition-colors"
                                 >
                                     <Plus className="w-3.5 h-3.5" />
                                     Add Subject
                                 </button>
                             </div>
 
-                            <div className="p-6">
-                                <div className="space-y-3">
-                                    {data.subjects.length > 0 ? (
-                                        <div className="grid grid-cols-12 gap-4 px-2 mb-2">
-                                            <div className="col-span-5 text-xs font-bold text-gray-400 uppercase">Subject Name</div>
-                                            <div className="col-span-3 text-xs font-bold text-gray-400 uppercase text-center">CA (40)</div>
-                                            <div className="col-span-3 text-xs font-bold text-gray-400 uppercase text-center">Exam (60)</div>
-                                            <div className="col-span-1"></div>
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-8 text-gray-500">
-                                            <AlertCircle className="w-8 h-8 mx-auto mb-2 text-gray-300"/>
-                                            No subjects found. Add one above.
+                            <div className="p-6 bg-gray-50/30">
+                                <div className="space-y-4">
+                                    {/* Table Header */}
+                                    {data.subjects.length > 0 && (
+                                        <div className="grid grid-cols-12 gap-4 px-4 mb-2">
+                                            <div className="col-span-6 md:col-span-5 text-xs font-extrabold text-gray-400 uppercase tracking-widest">Subject Name</div>
+                                            <div className="col-span-2 md:col-span-3 text-xs font-extrabold text-gray-400 uppercase tracking-widest text-center">CA (40)</div>
+                                            <div className="col-span-2 md:col-span-3 text-xs font-extrabold text-gray-400 uppercase tracking-widest text-center">Exam (60)</div>
+                                            <div className="col-span-2 md:col-span-1"></div>
                                         </div>
                                     )}
 
@@ -215,13 +220,13 @@ const EditResult: React.FC<Props> = ({ result }) => {
                                         const isExisting = !!subject.id;
 
                                         return (
-                                            <div key={index} className="group grid grid-cols-12 gap-4 items-center bg-gray-50 hover:bg-white hover:shadow-md border border-transparent hover:border-gray-100 rounded-xl p-2 transition-all duration-200">
+                                            <div key={index} className="group grid grid-cols-12 gap-4 items-center bg-white border border-gray-200 rounded-xl p-3 shadow-sm hover:border-[#37368b]/30 hover:shadow-md transition-all duration-200">
                                                 
                                                 {/* Subject Name */}
-                                                <div className="col-span-5">
+                                                <div className="col-span-6 md:col-span-5">
                                                     {isExisting ? (
                                                         // READ ONLY LOOK for Existing
-                                                        <div className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2.5 text-sm font-bold text-gray-500 shadow-sm cursor-not-allowed">
+                                                        <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm font-bold text-gray-500 shadow-sm cursor-not-allowed">
                                                             {subject.name}
                                                         </div>
                                                     ) : (
@@ -235,100 +240,114 @@ const EditResult: React.FC<Props> = ({ result }) => {
                                                                 newSubjects[index].name = e.target.value;
                                                                 setData('subjects', newSubjects);
                                                             }}
-                                                            className="w-full border-gray-200 bg-white rounded-lg focus:border-[#37368b] focus:ring-[#37368b] text-sm py-2.5 font-bold text-gray-700 shadow-sm"
+                                                            className="w-full border-none bg-transparent p-0 text-sm font-bold text-gray-900 placeholder-gray-400 focus:ring-0"
                                                         />
                                                     )}
                                                 </div>
 
                                                 {/* CA Score */}
-                                                <div className="col-span-3">
-                                                    <div className="relative mx-auto max-w-[5rem]">
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            max="40"
-                                                            value={subject.ca_score}
-                                                            onChange={(e) => {
-                                                                const newSubjects = [...data.subjects];
-                                                                newSubjects[index].ca_score = Number(e.target.value);
-                                                                setData('subjects', newSubjects);
-                                                            }}
-                                                            className="w-full text-center bg-white border border-gray-200 rounded-lg py-2.5 text-sm font-bold text-gray-700 focus:border-[#37368b] focus:ring-[#37368b] shadow-sm"
-                                                        />
-                                                    </div>
+                                                <div className="col-span-2 md:col-span-3 flex justify-center">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        max="40"
+                                                        value={subject.ca_score}
+                                                        onChange={e => {
+                                                            const subjects = [...data.subjects];
+                                                            subjects[index].ca_score = Number(e.target.value);
+                                                            setData('subjects', subjects);
+                                                        }}
+                                                        className="w-20 text-center bg-gray-50 border border-gray-200 rounded-lg py-2 text-sm font-bold text-gray-700 focus:border-[#37368b] focus:ring-[#37368b] focus:bg-white transition-all"
+                                                    />
                                                 </div>
 
                                                 {/* Exam Score */}
-                                                <div className="col-span-3">
-                                                    <div className="relative mx-auto max-w-[5rem]">
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            max="60"
-                                                            value={subject.exam_score}
-                                                            onChange={(e) => {
-                                                                const newSubjects = [...data.subjects];
-                                                                newSubjects[index].exam_score = Number(e.target.value);
-                                                                setData('subjects', newSubjects);
-                                                            }}
-                                                            className="w-full text-center bg-white border border-gray-200 rounded-lg py-2.5 text-sm font-bold text-gray-700 focus:border-[#37368b] focus:ring-[#37368b] shadow-sm"
-                                                        />
-                                                    </div>
+                                                <div className="col-span-2 md:col-span-3 flex justify-center">
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        max="60"
+                                                        value={subject.exam_score}
+                                                        onChange={e => {
+                                                            const subjects = [...data.subjects];
+                                                            subjects[index].exam_score = Number(e.target.value);
+                                                            setData('subjects', subjects);
+                                                        }}
+                                                        className="w-20 text-center bg-gray-50 border border-gray-200 rounded-lg py-2 text-sm font-bold text-gray-700 focus:border-[#37368b] focus:ring-[#37368b] focus:bg-white transition-all"
+                                                    />
                                                 </div>
 
-                                                {/* Remove Button */}
-                                                <div className="col-span-1 text-center">
-                                                    {/* We only allow deleting NEW subjects to prevent accidental DB deletions, 
-                                                        OR you can allow both if you handle backend deletion. 
-                                                        Here I allow deleting NEW ones only for safety. */}
+                                                {/* Delete Action */}
+                                                <div className="col-span-2 md:col-span-1 text-right pr-2">
                                                     {!isExisting && (
-                                                        <button 
+                                                        <button
                                                             type="button"
                                                             onClick={() => removeSubject(index)}
-                                                            className="text-gray-400 hover:text-red-500 transition-colors"
+                                                            className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all"
+                                                            title="Remove"
                                                         >
-                                                            <Trash2 className="w-4 h-4" />
+                                                            <Trash2 className="w-5 h-5" />
                                                         </button>
                                                     )}
                                                 </div>
                                             </div>
                                         );
                                     })}
-                                </div>
-                            </div>
-                            
-                            {/* Footer */}
-                            <div className="bg-gray-50 p-6 border-t border-gray-100">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                                    <div className="w-full">
-                                        <label className={labelClass}>
-                                            <FileText className="w-3 h-3" />
-                                            Teacher's Remark
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.remark}
-                                            onChange={e => setData('remark', e.target.value)}
-                                            className={inputClass}
-                                            placeholder="Overall performance comment..."
-                                        />
-                                        {errors.remark && <p className="text-red-500 text-xs mt-1">{errors.remark}</p>}
-                                    </div>
-                                    
-                                    <div className="flex justify-end">
-                                        <button
-                                            type="submit"
-                                            disabled={processing}
-                                            className="w-full md:w-auto flex items-center justify-center gap-2 bg-[#37368b] hover:bg-[#2a2970] text-white px-8 py-3 rounded-lg font-bold shadow-lg shadow-blue-900/10 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
-                                        >
-                                            <Save className="w-4 h-4" />
-                                            {processing ? 'Updating...' : 'Update Result Sheet'}
-                                        </button>
-                                    </div>
+
+                                    {data.subjects.length === 0 && (
+                                        <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center bg-white">
+                                            <AlertCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                                            <h3 className="text-sm font-bold text-gray-900">Missing Academic Data</h3>
+                                            <p className="text-xs text-gray-500 mt-1 mb-4">You must add at least one subject to save this result.</p>
+                                            <button
+                                                type="button"
+                                                onClick={addSubject}
+                                                className="text-[#37368b] text-sm font-bold hover:underline"
+                                            >
+                                                Add First Subject
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
-
+                        
+                        {/* Footer */}
+                        <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                                <div className="w-full">
+                                    <label className={labelClass}>
+                                        <FileText className="w-3 h-3" />
+                                        Teacher's Remark
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={data.remark}
+                                        onChange={e => setData('remark', e.target.value)}
+                                        className={inputClass}
+                                        placeholder="Overall performance comment..."
+                                    />
+                                    {errors.remark && <p className="text-red-500 text-xs mt-1 font-medium">{errors.remark}</p>}
+                                </div>
+                                
+                                <div className="flex justify-end">
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="w-full md:w-auto flex items-center justify-center gap-2 bg-[#37368b] hover:bg-[#2a2970] text-white px-8 py-3.5 rounded-xl font-bold shadow-xl shadow-indigo-900/20 hover:scale-105 active:scale-95 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+                                    >
+                                        {processing ? (
+                                            <span className="animate-pulse">Saving...</span>
+                                        ) : (
+                                            <>
+                                                <Save className="w-5 h-5" />
+                                                <span>Update Result Sheet</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>

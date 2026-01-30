@@ -11,7 +11,10 @@ import {
     Download, 
     Users,
     UserCircle,
-    CheckCircle
+    CheckCircle,
+    BookOpen,
+    AlertTriangle,
+    FileImage
 } from 'lucide-react';
 
 // Define the interface based on your DB schema
@@ -63,84 +66,112 @@ export default function Show({ homework }: Props) {
         >
             <Head title={homework.title} />
 
-            <div className="max-w-6xl w-full mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div className="w-[90%] mx-auto p-4 md:p-6 lg:p-8">
                 
-                {/* Back Button */}
-                <div className="mb-6">
-                    <Link 
-                        href="/homework" 
-                        className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#37368b] transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-1" />
-                        Back to Homework Board
-                    </Link>
+                {/* --- HEADER --- */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <div>
+                        <Link 
+                            href="/homework" 
+                            className="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#37368b] transition-colors mb-4"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Board
+                        </Link>
+                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+                            <span className="p-2.5 bg-[#ffc53a] text-white rounded-xl shadow-lg shadow-indigo-900/10">
+                                <BookOpen className="w-6 h-6" />
+                            </span>
+                            Assignment Details
+                        </h1>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Link 
+                            href={`/homework/${homework.id}/edit`}
+                            className="inline-flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-xl text-xs font-bold hover:border-[#37368b] hover:text-[#37368b] transition-all shadow-sm"
+                        >
+                            <Edit className="w-4 h-4" />
+                            Edit
+                        </Link>
+                        <button 
+                            onClick={handleDelete}
+                            disabled={processing}
+                            className="inline-flex items-center gap-2 bg-red-50 text-red-600 border border-red-100 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-red-100 transition-all shadow-sm disabled:opacity-50"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            Delete
+                        </button>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     
                     {/* LEFT COLUMN: Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="lg:col-span-2 space-y-8">
                         
                         {/* Title Card */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-8 relative overflow-hidden">
-                            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#37368b]"></div>
+                        <div className=" group bg-white rounded-xl shadow-sm border border-gray-100 p-8 relative overflow-hidden">
+                            {/* Accent Bar */}
+                            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#37368b] group-hover:bg-[#ffc53a] transition-colors"></div>
                             
                             <div className="flex items-center gap-3 mb-4">
-                                <span className="px-3 py-1 bg-blue-50 text-[#37368b] text-xs font-bold uppercase tracking-wider rounded-md">
+                                <span className="px-3 py-1 bg-blue-50 text-[#37368b] text-[10px] font-extrabold uppercase tracking-widest rounded-lg border border-blue-100">
                                     {homework.subject}
                                 </span>
                                 {isOverdue && (
-                                    <span className="px-3 py-1 bg-red-50 text-red-700 text-xs font-bold uppercase tracking-wider rounded-md">
-                                        Overdue
+                                    <span className="px-3 py-1 bg-red-50 text-red-700 text-[10px] font-extrabold uppercase tracking-widest rounded-lg border border-red-100 flex items-center gap-1">
+                                        <AlertTriangle className="w-3 h-3" /> Overdue
                                     </span>
                                 )}
                             </div>
 
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">{homework.title}</h1>
+                            <h2 className="text-2xl font-bold text-gray-900 mb-2 leading-tight">{homework.title}</h2>
                             
-                            <div className="flex items-center text-sm text-gray-500 gap-4 mt-2">
-                                <div className="flex items-center gap-1.5">
-                                    <UserCircle className="w-4 h-4 text-gray-400" />
-                                    <span>Posted by <span className="font-semibold text-gray-700">{homework.created_by.name}</span></span>
+                            <div className="flex flex-wrap items-center text-xs text-gray-500 gap-4 mt-3 pt-4 border-t border-gray-50">
+                                <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                    <UserCircle className="w-3.5 h-3.5 text-gray-400" />
+                                    <span>By <span className="font-bold text-gray-700">{homework.created_by.name}</span></span>
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                    <Clock className="w-4 h-4 text-gray-400" />
-                                    <span>Posted on {new Date(homework.created_at).toLocaleDateString()}</span>
+                                <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                    <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                    <span>Posted {new Date(homework.created_at).toLocaleDateString()}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Description Card */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                            <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-[#37368b]" />
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+                            <h3 className="text-sm font-extrabold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-[#37368b]" />
                                 Instructions
                             </h3>
-                            <div className="prose prose-blue max-w-none text-gray-600 leading-relaxed whitespace-pre-wrap">
-                                {homework.description}
+                            <div className="prose prose-blue prose-sm max-w-none text-gray-600 leading-relaxed">
+                                <p className="whitespace-pre-wrap">{homework.description}</p>
                             </div>
                         </div>
 
-                        {/* Attachment Preview (If exists) */}
+                        {/* Attachment Preview */}
                         {homework.image_path && (
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sm:p-8">
-                                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <Download className="w-5 h-5 text-[#37368b]" />
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+                                <h3 className="text-sm font-extrabold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <FileImage className="w-4 h-4 text-[#37368b]" />
                                     Attachment
                                 </h3>
-                                <div className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+                                <div className="rounded-xl overflow-hidden border border-gray-200 bg-gray-50 p-2">
                                     <img 
                                         src={`/storage/${homework.image_path}`} 
                                         alt="Homework Attachment" 
-                                        className="w-full h-auto object-contain max-h-[500px]"
+                                        className="w-full h-auto object-contain max-h-[400px] rounded-lg"
                                     />
                                 </div>
                                 <div className="mt-4 flex justify-end">
                                     <a 
                                         href={`/storage/${homework.image_path}`} 
                                         download 
-                                        className="inline-flex items-center gap-2 text-sm font-bold text-[#37368b] hover:underline"
+                                        className="inline-flex items-center gap-2 text-xs font-bold text-white bg-[#37368b] hover:bg-[#2a2970] px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow-md"
                                     >
+                                        <Download className="w-4 h-4" />
                                         Download Original
                                     </a>
                                 </div>
@@ -152,16 +183,23 @@ export default function Show({ homework }: Props) {
                     <div className="lg:col-span-1 space-y-6">
                         
                         {/* Status Card */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Assignment Details</h3>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-6">
+                            <div className="flex items-center gap-2 mb-6">
+                                <div className="p-1.5 bg-[#ffc53a]/20 text-[#d97706] rounded-md">
+                                    <Calendar className="w-4 h-4" />
+                                </div>
+                                <h3 className="text-sm font-extrabold text-gray-900 uppercase tracking-wide">Assignment Info</h3>
+                            </div>
                             
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 {/* Due Date */}
-                                <div className={`flex items-start gap-3 p-3 rounded-lg border ${isOverdue ? 'bg-red-50 border-red-100' : isDueSoon ? 'bg-yellow-50 border-yellow-100' : 'bg-gray-50 border-gray-100'}`}>
-                                    <Calendar className={`w-5 h-5 mt-0.5 ${isOverdue ? 'text-red-500' : isDueSoon ? 'text-yellow-600' : 'text-gray-500'}`} />
+                                <div className={`flex items-start gap-3 p-4 rounded-xl border ${isOverdue ? 'bg-red-50 border-red-100' : isDueSoon ? 'bg-amber-50 border-amber-100' : 'bg-gray-50 border-gray-100'}`}>
+                                    <div className={`mt-0.5 ${isOverdue ? 'text-red-500' : isDueSoon ? 'text-amber-600' : 'text-gray-400'}`}>
+                                        <Clock className="w-5 h-5" />
+                                    </div>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-500 uppercase">Due Date</p>
-                                        <p className={`font-semibold ${isOverdue ? 'text-red-700' : 'text-gray-800'}`}>
+                                        <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-0.5">Due Date</p>
+                                        <p className={`font-bold text-sm ${isOverdue ? 'text-red-700' : 'text-gray-900'}`}>
                                             {new Date(homework.due_date).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })}
                                         </p>
                                         <p className="text-xs mt-1 font-medium opacity-80">
@@ -171,18 +209,20 @@ export default function Show({ homework }: Props) {
                                 </div>
 
                                 {/* Target Class */}
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-100">
-                                    <Users className="w-5 h-5 text-[#37368b]" />
+                                <div className="flex items-center gap-3 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                    <div className="p-2 bg-white rounded-lg border border-gray-200 shadow-sm text-[#37368b]">
+                                        <Users className="w-5 h-5" />
+                                    </div>
                                     <div>
-                                        <p className="text-xs font-bold text-gray-500 uppercase">Assigned To</p>
-                                        <p className="font-semibold text-gray-800 text-lg">
-                                            {homework.form} - {homework.class}
-                                        </p>
+                                        <p className="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-0.5">Assigned To</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <span className="font-bold text-gray-900 text-lg">{homework.form}</span>
+                                            <span className="text-sm font-medium text-gray-500">- {homework.class}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
 
                     </div>
                 </div>

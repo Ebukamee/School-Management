@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, type SharedData } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { Printer, X, BookOpen } from 'lucide-react';
 
 // --- Types ---
 interface DbSubject {
@@ -33,7 +34,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Results({ results = [] }: Props) {
-    // Get User Data for the Print View
     const { auth } = usePage<SharedData>().props;
     const user = auth.user;
 
@@ -78,21 +78,21 @@ export default function Results({ results = [] }: Props) {
     // --- Visual Helpers (Web View Only) ---
     const getGradeColor = (grade: string): string => {
         const g = grade.toUpperCase();
-        if (g === 'A') return 'text-green-600 bg-green-50';
-        if (g === 'B') return 'text-blue-600 bg-blue-50';
-        if (g === 'C') return 'text-yellow-600 bg-yellow-50';
-        if (g === 'D') return 'text-orange-600 bg-orange-50';
-        if (g === 'E') return 'text-amber-600 bg-amber-50';
-        return 'text-red-600 bg-red-50';
+        if (g === 'A') return 'text-green-700 bg-green-50 border-green-100 border';
+        if (g === 'B') return 'text-blue-700 bg-blue-50 border-blue-100 border';
+        if (g === 'C') return 'text-amber-700 bg-amber-50 border-amber-100 border';
+        if (g === 'D') return 'text-orange-700 bg-orange-50 border-orange-100 border';
+        if (g === 'E') return 'text-red-700 bg-red-50 border-red-100 border';
+        return 'text-gray-700 bg-gray-50 border-gray-200 border';
     };
 
     const getScoreColor = (score: number): string => {
         if (score >= 70) return 'text-green-600';
         if (score >= 60) return 'text-blue-600';
-        if (score >= 50) return 'text-yellow-600';
+        if (score >= 50) return 'text-amber-600';
         if (score >= 45) return 'text-orange-600';
-        if (score >= 40) return 'text-amber-600';
-        return 'text-red-600';
+        if (score >= 40) return 'text-red-600';
+        return 'text-gray-600';
     };
 
     const getRemarkFromGrade = (grade: string) => {
@@ -109,62 +109,59 @@ export default function Results({ results = [] }: Props) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Academic Results" />
             
-            <div className="container mx-auto px-4 py-8">
+            <div className="w-[90%] mx-auto p-4 md:p-6 lg:p-8">
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-[#37368b] mb-2">Academic Results</h1>
-                    <p className="text-gray-600">View your academic performance across different classes and terms</p>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+                           
+                            Academic Results
+                        </h1>
+                        <p className="text-gray-500 mt-2 font-medium ml-1">View your academic performance across different classes and terms.</p>
+                    </div>
                 </div>
 
                 {/* Empty State */}
                 {groupedResults.length === 0 && (
-                    <div className="text-center p-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                        <p className="text-gray-500">No results found yet.</p>
+                    <div className="text-center p-12 bg-white rounded-xl border-2 border-dashed border-gray-200 shadow-sm max-w-2xl mx-auto">
+                        <p className="text-gray-500 font-medium">No results found yet.</p>
                     </div>
                 )}
 
                 {/* Results by Class Level */}
-                <div className="space-y-6 max-w-4xl mx-auto">
+                <div className="space-y-8  mx-auto">
                     {groupedResults.map((levelData: any, index: number) => (
-                        <div key={index} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-                            <div className="bg-[#37368b] px-6 py-4">
-                                <div className="flex justify-between items-center">
-                                    <h2 className="text-xl font-bold text-white">{levelData.level}</h2>
-                                    <span className="text-white/80 text-sm">{levelData.year}</span>
-                                </div>
+                        <div key={index} className="bg-pink  rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div className="bg-[#37368b] px-6 py-4 flex justify-between items-center">
+                                <h2 className="text-xl font-bold text-white">{levelData.level}</h2>
+                                <span className="text-white/80 text-sm font-medium bg-white/10 px-3 py-1 rounded-full">{levelData.year}</span>
                             </div>
 
                             <div className="p-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {levelData.terms.map((term: any, termIndex: number) => (
                                         <div
                                             key={termIndex}
                                             onClick={() => openTermModal(levelData.level, term)}
-                                            className="border-2 border-gray-200 rounded-xl p-4 hover:border-[#37368b] hover:shadow-md transition-all duration-200 cursor-pointer group"
+                                            className="border border-gray-200 rounded-xl p-5 hover:border-[#37368b] hover:shadow-lg transition-all duration-300 cursor-pointer group bg-gray-50/30 hover:bg-white"
                                         >
-                                            <div className="flex justify-between items-start mb-3">
-                                                <h3 className="font-semibold text-gray-900 group-hover:text-[#37368b] capitalize">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <h3 className="font-bold text-gray-900 group-hover:text-[#37368b] capitalize text-lg">
                                                     {term.term} Term
                                                 </h3>
                                                 <div className="text-right">
-                                                    <div className={`text-lg font-bold ${getScoreColor(term.average)}`}>
+                                                    <div className={`text-xl font-extrabold ${getScoreColor(term.average)}`}>
                                                         {term.average}%
                                                     </div>
-                                                    <div className="text-xs text-gray-500">Average</div>
+                                                    <div className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Average</div>
                                                 </div>
                                             </div>
                                             
-                                            <div className="flex justify-between items-center text-sm text-gray-600">
-                                                <span>Subjects: {term.subjects.length}</span>
-                                            </div>
-                                            
-                                            <div className="mt-3 flex justify-between items-center">
-                                                <span className="text-xs text-gray-500 capitalize">
-                                                    {term.remark || "No Remark"}
-                                                </span>
-                                                <button className="text-[#37368b] text-sm font-medium hover:text-[#2a2970]">
+                                            <div className="flex justify-between items-center text-sm font-medium text-gray-600 border-t border-gray-100 pt-3">
+                                                <span>{term.subjects.length} Subjects</span>
+                                                <span className="text-[#37368b] text-xs font-bold hover:underline flex items-center gap-1">
                                                     View Details →
-                                                </button>
+                                                </span>
                                             </div>
                                         </div>
                                     ))}
@@ -176,34 +173,34 @@ export default function Results({ results = [] }: Props) {
 
                 {/* Statistics Summary */}
                 {groupedResults.length > 0 && (
-                <div className="mt-12 max-w-4xl mx-auto">
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900 text-center mb-6">Academic Summary</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <div className="text-center p-3">
-                                <div className="text-xl font-bold text-[#37368b]">{groupedResults.length}</div>
-                                <div className="text-gray-600 text-sm">Classes</div>
-                            </div>
-                            <div className="text-center p-3">
-                                <div className="text-xl font-bold text-[#37368b]">{results.length}</div>
-                                <div className="text-gray-600 text-sm">Total Terms</div>
-                            </div>
-                            <div className="text-center p-3">
-                                <div className="text-xl font-bold text-[#37368b]">
-                                    {(results.reduce((acc, curr) => acc + curr.subjects.length, 0))}
+                    <div className="mt-12  mx-auto">
+                        <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+                            <h3 className="text-sm font-extrabold text-gray-400 uppercase tracking-widest text-center mb-6">Academic Summary</h3>
+                            <div className="grid grid-cols-3 gap-4 divide-x divide-gray-100">
+                                <div className="text-center px-4">
+                                    <div className="text-3xl font-extrabold text-[#37368b]">{groupedResults.length}</div>
+                                    <div className="text-gray-500 text-xs font-bold uppercase mt-1">Classes</div>
                                 </div>
-                                <div className="text-gray-600 text-sm">Total Subjects</div>
+                                <div className="text-center px-4">
+                                    <div className="text-3xl font-extrabold text-[#37368b]">{results.length}</div>
+                                    <div className="text-gray-500 text-xs font-bold uppercase mt-1">Total Terms</div>
+                                </div>
+                                <div className="text-center px-4">
+                                    <div className="text-3xl font-extrabold text-[#37368b]">
+                                        {(results.reduce((acc, curr) => acc + curr.subjects.length, 0))}
+                                    </div>
+                                    <div className="text-gray-500 text-xs font-bold uppercase mt-1">Total Subjects</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 )}
             </div>
 
             {/* --- MODAL --- */}
             {isModalOpen && selectedTerm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
                         
                         {/* 1. ID FOR PRINTING */}
                         <div id="printable-result">
@@ -213,64 +210,64 @@ export default function Results({ results = [] }: Props) {
                                 ============================================== */}
                             <div className="print:hidden">
                                 {/* Modal Header */}
-                                <div className="bg-[#37368b] px-6 py-4 rounded-t-2xl">
+                                <div className="bg-[#37368b] px-8 py-5 sticky top-0 z-10">
                                     <div className="flex justify-between items-center">
                                         <div>
-                                            <h3 className="text-xl font-bold text-white capitalize">{selectedTerm.level} - {selectedTerm.term} Term</h3>
-                                            <p className="text-white/80 text-sm">Academic Performance Details</p>
+                                            <h3 className="text-xl font-bold text-white capitalize tracking-tight">{selectedTerm.level} - {selectedTerm.term} Term</h3>
+                                            <p className="text-white/70 text-sm font-medium">Academic Performance Details</p>
                                         </div>
-                                        <button onClick={closeModal} className="text-white/80 hover:text-white transition-colors">
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
+                                        <button onClick={closeModal} className="text-white/60 hover:text-white p-1 rounded-full hover:bg-white/10 transition-all">
+                                            <X className="w-6 h-6" />
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* Performance Summary */}
-                                <div className="p-6 border-b border-gray-200">
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-[#37368b]">{selectedTerm.average}%</div>
-                                            <div className="text-sm text-gray-600">Average Score</div>
+                                <div className="p-8 border-b border-gray-100 bg-gray-50/50">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                                        <div className="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                            <div className="text-3xl font-extrabold text-[#37368b]">{selectedTerm.average}%</div>
+                                            <div className="text-xs font-bold text-gray-400 uppercase mt-1">Average Score</div>
                                         </div>
-                                        <div className="text-center">
-                                            <div className="text-2xl font-bold text-[#37368b]">{selectedTerm.subjects.length}</div>
-                                            <div className="text-sm text-gray-600">Subjects</div>
+                                        <div className="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                            <div className="text-3xl font-extrabold text-[#37368b]">{selectedTerm.subjects.length}</div>
+                                            <div className="text-xs font-bold text-gray-400 uppercase mt-1">Subjects</div>
                                         </div>
-                                        <div className="text-center">
+                                        <div className="text-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm col-span-2 md:col-span-1">
                                             <div className="text-lg font-bold text-[#37368b] capitalize">{selectedTerm.remark || "N/A"}</div>
-                                            <div className="text-sm text-gray-600">Teacher's Remark</div>
+                                            <div className="text-xs font-bold text-gray-400 uppercase mt-1">Remark</div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Subjects Table (Web Colorful Ver) */}
-                                <div className="p-6">
-                                    <h4 className="font-semibold text-[#37368b] mb-4">Subject Performance Breakdown</h4>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full">
+                                <div className="p-8">
+                                    <h4 className="text-sm font-extrabold text-gray-900 uppercase tracking-widest mb-6 border-l-4 border-[#37368b] pl-3">Subject Breakdown</h4>
+                                    <div className="overflow-hidden rounded-xl border border-gray-200">
+                                        <table className="w-full text-sm">
                                             <thead>
                                                 <tr className="bg-gray-50 border-b border-gray-200">
-                                                    <th className="px-4 py-3 text-left text-sm font-semibold text-[#37368b]">Subject</th>
-                                                    <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">CA</th>
-                                                    <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Exam</th>
-                                                    <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Total</th>
-                                                    <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Grade</th>
-                                                    <th className="px-4 py-3 text-center text-sm font-semibold text-[#37368b]">Remark</th>
+                                                    <th className="px-6 py-4 text-left font-bold text-gray-600 uppercase text-xs tracking-wider">Subject</th>
+                                                    <th className="px-4 py-4 text-center font-bold text-gray-600 uppercase text-xs tracking-wider">CA</th>
+                                                    <th className="px-4 py-4 text-center font-bold text-gray-600 uppercase text-xs tracking-wider">Exam</th>
+                                                    <th className="px-4 py-4 text-center font-bold text-gray-600 uppercase text-xs tracking-wider">Total</th>
+                                                    <th className="px-4 py-4 text-center font-bold text-gray-600 uppercase text-xs tracking-wider">Grade</th>
+                                                    <th className="px-6 py-4 text-center font-bold text-gray-600 uppercase text-xs tracking-wider">Remark</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-gray-200">
+                                            <tbody className="divide-y divide-gray-100 bg-white">
                                                 {selectedTerm.subjects.map((subject: DbSubject, index: number) => (
-                                                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                                                        <td className="px-4 py-3"><div className="font-medium text-gray-900">{subject.subject_name}</div></td>
-                                                        <td className="px-4 py-3 text-center"><div className="font-medium text-gray-700">{subject.ca_score}</div></td>
-                                                        <td className="px-4 py-3 text-center"><div className="font-medium text-gray-700">{subject.exam_score}</div></td>
-                                                        <td className="px-4 py-3 text-center"><div className={`font-semibold ${getScoreColor(subject.total)}`}>{subject.total}%</div></td>
-                                                        <td className="px-4 py-3 text-center">
-                                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getGradeColor(subject.grade)}`}>{subject.grade}</span>
+                                                    <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                                                        <td className="px-6 py-4 font-bold text-gray-800">{subject.subject_name}</td>
+                                                        <td className="px-4 py-4 text-center font-medium text-gray-600">{subject.ca_score}</td>
+                                                        <td className="px-4 py-4 text-center font-medium text-gray-600">{subject.exam_score}</td>
+                                                        <td className="px-4 py-4 text-center">
+                                                            <span className={`font-bold ${getScoreColor(subject.total)}`}>{subject.total}%</span>
                                                         </td>
-                                                        <td className="px-4 py-3 text-center"><span className="text-sm text-gray-600">{getRemarkFromGrade(subject.grade)}</span></td>
+                                                        <td className="px-4 py-4 text-center">
+                                                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${getGradeColor(subject.grade)}`}>{subject.grade}</span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center text-xs font-medium text-gray-500">{getRemarkFromGrade(subject.grade)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -281,16 +278,18 @@ export default function Results({ results = [] }: Props) {
 
                             {/* ==============================================
                                 VIEW 2: PRINT UI (Only visible when printing)
+                                - Reverted to ORIGINAL FORMAL LAYOUT
+                                - Changed font to 'font-serif'
                                 ============================================== */}
-                            <div className="hidden print:block p-8 bg-white text-black">
+                            <div className="hidden print:block p-8 bg-white text-black font-serif">
                                 {/* Formal Header */}
                                 <div className="text-center border-b-2 border-black pb-4 mb-6">
                                     <div className="flex flex-col items-center justify-center mb-4">
-                                         <div className="w-16 h-16 mb-2">
-                                             <AppLogoIcon className="w-full h-full text-black" />
-                                         </div>
-                                         <h1 className="text-3xl font-bold uppercase tracking-wider">Golfield Junior School</h1>
-                                         <p className="text-sm font-serif italic">123 Osolo Road, Ajao Estate</p>
+                                     <div className="w-16 h-16 mb-2">
+                                        <AppLogoIcon className="w-full h-full text-black" />
+                                     </div>
+                                     <h1 className="text-3xl font-bold uppercase tracking-wider">Golfield Junior School</h1>
+                                     <p className="text-sm italic">123 Osolo Road, Ajao Estate</p>
                                     </div>
                                     <h2 className="text-xl font-bold mt-4 uppercase underline">Termly Report Sheet</h2>
                                 </div>
@@ -312,9 +311,8 @@ export default function Results({ results = [] }: Props) {
                                 </div>
 
                                 {/* Formal Table (Black & White) */}
-                                <table className="w-full border-collapse border border-black text-sm">
+                                <table className="w-full border-collapse border border-black text-sm mb-8">
                                     <thead>
-
                                         <tr className="bg-gray-100">
                                             <th className="border border-black px-2 py-2 text-left">Subject</th>
                                             <th className="border border-black px-2 py-2 text-center">CA</th>
@@ -339,13 +337,12 @@ export default function Results({ results = [] }: Props) {
                                 </table>
 
                                 {/* Summary & Signatures */}
-                        
-                                    <div className="border border-black p-2 text-center">
-                                        <p className="text-xs font-bold uppercase">Remarks</p>
-                                        <p className="text-md italic">{selectedTerm.remark || "Satisfactory"}</p>
-                                    </div>
+                                <div className="border border-black p-2 text-center mb-16">
+                                    <p className="text-xs font-bold uppercase">Remarks</p>
+                                    <p className="text-md italic">{selectedTerm.remark || "Satisfactory"}</p>
+                                </div>
 
-                                <div className="flex justify-between mt-16 px-4">
+                                <div className="flex justify-between px-4">
                                     <div className="text-center w-40">
                                         <div className="border-b border-black mb-2"></div>
                                         <p className="text-xs">Teacher's Signature</p>
@@ -356,18 +353,24 @@ export default function Results({ results = [] }: Props) {
                                         <p className="text-[10px] text-gray-500">{new Date().toDateString()}</p>
                                     </div>
                                 </div>
-                            </div>
-
+                            </div> 
                         </div> 
                         {/* END PRINTABLE AREA */}
 
                         {/* Modal Footer (Hidden on Print) */}
-                        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl no-print">
-                            <div className="flex justify-end space-x-3">
-                                <button onClick={closeModal} className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors">
+                        <div className="px-8 py-5 border-t border-gray-100 bg-gray-50 rounded-b-2xl no-print sticky bottom-0">
+                            <div className="flex justify-end gap-4">
+                                <button 
+                                    onClick={closeModal} 
+                                    className="px-6 py-2.5 text-gray-600 hover:text-gray-900 font-bold text-sm bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm"
+                                >
                                     Close
                                 </button>
-                                <button onClick={() => window.print()} className="bg-yellow-500 text-gray-900 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-400 transition-colors">
+                                <button 
+                                    onClick={() => window.print()} 
+                                    className="flex items-center gap-2 bg-[#ffc53a] text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-[#f5b029] transition-all shadow-lg shadow-orange-900/10 hover:shadow-orange-900/20 hover:-translate-y-0.5"
+                                >
+                                    <Printer className="w-4 h-4" />
                                     Print Result
                                 </button>
                             </div>

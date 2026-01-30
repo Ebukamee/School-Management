@@ -11,9 +11,9 @@ use Inertia\Inertia;
 
 class CreateNewUser implements CreatesNewUsers
 {
-    
+
     use PasswordValidationRules;
-   
+
 
     /**
      * Validate and create a newly registered user.
@@ -23,9 +23,9 @@ class CreateNewUser implements CreatesNewUsers
     public function create(array $input): User
     {
         $nextAvailable = RegNumber::where('is_used', false)
-        ->orderBy('id', 'asc')
-        ->first();
-      
+            ->orderBy('id', 'asc')
+            ->first();
+
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -36,7 +36,14 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::unique(User::class),
             ],
             'password' => $this->passwordRules(),
-            'reg_number' => ['required_if:role,student', 'string', 'max:20', 'unique:users','exists:reg_numbers,reg_number,is_used,0'],
+            'reg_number' => [
+                'required_if:role,student',
+                'nullable', 
+                'string',
+                'max:20',
+                'unique:users,reg_number', 
+                'exists:reg_numbers,reg_number', 
+            ],
         ])->validate();
 
         return User::create([

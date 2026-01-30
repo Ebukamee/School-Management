@@ -85,12 +85,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'todaysClasses' => $todaysClasses,
             'blogs' => $info
         ]);
+        
     })->name('dashboard');
     Route::middleware(['auth', 'student'])->group(function () {
         Route::get('results', [ResultsController::class, 'index'])->name('results.index');
     });
     Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');
 });
+Route::put('/allowed-numbers/{reg_number}', [RegNumberController::class, 'update'])
+    ->name('reg_numbers.update');
 // Route::get('/homework/{id}', [HomeWorkController::class, 'show'])->name('homework.show');
 Route::get('/homework', [HomeWorkController::class, 'index'])->name('homework.index');
 Route::middleware(['auth', 'teacher'])->group(function () {

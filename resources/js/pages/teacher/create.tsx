@@ -125,7 +125,7 @@ const CreateResult: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                     <div>
                         <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-                            <span className="p-2 bg-[#37368b] text-white rounded-xl shadow-lg shadow-indigo-900/20">
+                            <span className="p-2 bg-[#ffc53a] text-white rounded-xl shadow-lg shadow-indigo-900/20">
                                 <FileText className="w-6 h-6" />
                             </span>
                             Upload Result
