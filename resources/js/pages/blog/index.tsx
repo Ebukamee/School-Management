@@ -9,6 +9,7 @@ import {
     Newspaper,
     ImageIcon 
 } from 'lucide-react';
+import Navbar from '@/components/ui/NavHome';
 
 interface Blog {
     title: string;
@@ -27,37 +28,25 @@ export default function Index({ blogs }: { blogs: Blog[] }) {
     const { auth } = usePage().props as any;
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Blog', href: '#' }]}>
+        <>
+        <Navbar />
             <Head title="School News" />
 
-            <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+            <div className="w-[90%] mt-[100px] mx-auto p-4 md:p-6 lg:p-8">
                 
                 {/* --- HEADER --- */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-                    <div className="max-w-2xl">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2.5 bg-blue-50 text-[#37368b] rounded-xl">
-                                <Newspaper className="w-6 h-6" />
-                            </div>
-                            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
-                                School News
-                            </h1>
-                        </div>
-                        <p className="text-gray-500 text-lg ml-1">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+                    <div>
+                        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
+                           
+                            School News
+                        </h1>
+                        <p className="text-gray-500 mt-2 font-medium ml-1">
                             Catch up on the latest announcements, student achievements, and events.
                         </p>
                     </div>
 
-                    {/* Write Button (Only if logged in) */}
-                    {auth.user && (
-                        <Link 
-                            href="/blog/create" 
-                            className="flex-shrink-0 bg-[#37368b] hover:bg-[#2a2970] text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-900/10 flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-95"
-                        >
-                            <Plus className="w-5 h-5" />
-                            <span>Write Post</span>
-                        </Link>
-                    )}
+               
                 </div>
 
                 {/* --- BLOG GRID --- */}
@@ -67,10 +56,10 @@ export default function Index({ blogs }: { blogs: Blog[] }) {
                             <Link 
                                 key={blog.slug} 
                                 href={`/blog/${blog.slug}`} 
-                                className="group flex flex-col h-full bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-indigo-100/50 transition-all duration-300 hover:-translate-y-1"
+                                className="group flex flex-col h-full bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-indigo-900/5 transition-all duration-300 hover:-translate-y-1"
                             >
                                 {/* Image Container */}
-                                <div className="relative h-56 w-full overflow-hidden bg-gray-100">
+                                <div className="relative h-52 w-full overflow-hidden bg-gray-50">
                                     {blog.cover_image ? (
                                         <img 
                                             src={'/storage/' + blog.cover_image} 
@@ -78,14 +67,14 @@ export default function Index({ blogs }: { blogs: Blog[] }) {
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-                                            <ImageIcon className="w-12 h-12 text-[#37368b]/20 mb-2" />
-                                            <span className="text-xs font-bold text-[#37368b]/40 uppercase tracking-widest">No Cover Image</span>
+                                        <div className="w-full h-full flex flex-col items-center justify-center bg-[#f8f9fc]">
+                                            <ImageIcon className="w-10 h-10 text-gray-300 mb-2" />
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No Image</span>
                                         </div>
                                     )}
                                     
                                     {/* Read Time Badge */}
-                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-gray-700 shadow-sm flex items-center gap-1.5">
+                                    <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-[10px] font-extrabold text-gray-600 shadow-sm flex items-center gap-1.5 uppercase tracking-wide">
                                         <Clock className="w-3 h-3 text-[#37368b]" />
                                         {blog.read_time}
                                     </div>
@@ -94,18 +83,18 @@ export default function Index({ blogs }: { blogs: Blog[] }) {
                                 {/* Content */}
                                 <div className="p-6 flex flex-col flex-grow">
                                     {/* Date */}
-                                    <div className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        {new Date(blog.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    <div className="flex items-center gap-2 text-[10px] font-extrabold text-[#ffc53a] mb-3 uppercase tracking-widest">
+                                        <Calendar className="w-3 h-3 text-gray-400" />
+                                        <span className="text-gray-400">{new Date(blog.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                     </div>
 
                                     {/* Title */}
-                                    <h3 className="text-xl font-extrabold text-gray-900 mb-3 leading-snug group-hover:text-[#37368b] transition-colors line-clamp-2">
+                                    <h3 className="text-lg font-extrabold text-gray-900 mb-3 leading-tight group-hover:text-[#37368b] transition-colors line-clamp-2">
                                         {blog.title}
                                     </h3>
                                     
                                     {/* Excerpt */}
-                                    <p className="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-6 flex-grow">
+                                    <p className="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-6 flex-grow font-medium">
                                         {blog.excerpt}
                                     </p>
 
@@ -123,7 +112,7 @@ export default function Index({ blogs }: { blogs: Blog[] }) {
                                         </div>
                                         
                                         {/* Stylized Action Button */}
-                                        <div className="w-8 h-8 rounded-full bg-blue-50 text-[#37368b] flex items-center justify-center group-hover:bg-[#37368b] group-hover:text-white transition-all duration-300 transform group-hover:scale-110">
+                                        <div className="w-8 h-8 rounded-full bg-blue-50 text-[#37368b] flex items-center justify-center group-hover:bg-[#37368b] group-hover:text-white transition-all duration-300">
                                             <ChevronRight className="w-4 h-4 ml-0.5" />
                                         </div>
                                     </div>
@@ -133,22 +122,26 @@ export default function Index({ blogs }: { blogs: Blog[] }) {
                     </div>
                 ) : (
                     /* --- EMPTY STATE --- */
-                    <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-gray-200">
-                        <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                            <Newspaper className="w-8 h-8 text-gray-300" />
+                    <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                        <div className="w-16 h-16 bg-[#ffc53a]/10 rounded-full flex items-center justify-center mb-4 border border-[#ffc53a]/20">
+                            <Newspaper className="w-8 h-8 text-[#d97706]" />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900">No news yet</h3>
-                        <p className="text-gray-500 max-w-sm text-center mt-2">
+                        <p className="text-gray-500 max-w-sm text-center mt-2 font-medium">
                             The school blog is currently empty. Check back later for updates!
                         </p>
                         {auth.user && (
-                            <Link href="/blog/create" className="mt-6 text-[#37368b] font-bold hover:underline flex items-center gap-1">
+                            <Link 
+                                href="/blog/create" 
+                                className="mt-6 inline-flex items-center gap-2 text-[#37368b] font-bold hover:underline"
+                            >
                                 Create first post <ChevronRight className="w-4 h-4" />
                             </Link>
                         )}
                     </div>
                 )}
             </div>
-        </AppLayout>
+
+        </>
     );
 }

@@ -9,17 +9,16 @@ import {
     AlertCircle, 
     ArrowLeft, 
     X,
-    MoreVertical,
     Settings,
-    FileText
+    FileText,
+    PenTool
 } from 'lucide-react';
 
 // Editor Imports
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 
-// --- CUSTOM CSS FOR EASYMDE TO MAKE IT SLEEK ---
-// You can put this in your global CSS, but included here for portability
+// --- CUSTOM CSS FOR EASYMDE ---
 const customEditorStyles = `
     .EasyMDEContainer { border: none; }
     .editor-toolbar { 
@@ -27,16 +26,16 @@ const customEditorStyles = `
         background: transparent !important; 
         opacity: 0.6; 
         transition: opacity 0.2s;
-        padding: 0;
+        padding: 0 1rem;
     }
     .editor-toolbar:hover { opacity: 1; }
     .CodeMirror { 
         border: none !important; 
         background: transparent !important;
-        font-family: 'Inter', sans-serif; /* Or your app font */
+        font-family: 'Inter', sans-serif;
         font-size: 1.125rem;
-        color: #1f2937;
-        padding: 0;
+        color: #374151;
+        padding: 1rem;
         min-height: 400px;
     }
     .editor-statusbar { display: none !important; }
@@ -57,18 +56,16 @@ export default function Create() {
     const [preview, setPreview] = useState<string | null>(null);
     const [showSettings, setShowSettings] = useState(false);
 
-    // Cleanup object URL on unmount to prevent memory leaks
     useEffect(() => {
         return () => {
             if (preview) URL.revokeObjectURL(preview);
         };
     }, [preview]);
 
-    // Memoized Editor Options
     const editorOptions = useMemo(() => {
         return {
             spellChecker: false,
-            placeholder: "Tell your story...",
+            placeholder: "Start writing your story...",
             status: false,
             autosave: {
                 enabled: true,
@@ -102,24 +99,30 @@ export default function Create() {
         setPreview(null);
     };
 
-    const handleSubmit = (publishStatus: boolean) => {
-        // We manually mutate data here just before send, 
-        // or prefer setData('is_published', publishStatus) and useEffect to trigger submit
-        // But for Inertia helper, passing data directly to post is safer:
-        
-        const formData = {
-            ...data,
-            is_published: publishStatus
-        };
+   const handleSubmit = (publishStatus: boolean) => {
+    data.is_published = publishStatus;
+    
+    // 2. Call transform on the form instance
+    // This defines the "filter" for the NEXT request
+    const form = { setData, post, transform: (callback: any) => {} }; // logic context
+    
+    // Correct Syntax for useForm:
+    setData('is_published', publishStatus);
 
-        post('/blog', {
-            data: formData, // Inertia usually handles this automatically with useForm
-            forceFormData: true,
-            onSuccess: () => {
-                localStorage.removeItem("smde_school_blog_draft_v2");
-            }
-        });
-    };
+    // Call transform directly on the object returned by useForm
+    // But honestly, the simplest way without TS errors is this:
+    post('/blog', {
+        forceFormData: true,
+        // We pass the modified data via the transform method 
+        // that belongs to the useForm instance
+        onBefore: () => {
+            // Some versions prefer setting data here
+        },
+        onSuccess: () => {
+            localStorage.removeItem("smde_school_blog_draft_v2");
+        }
+    });
+};
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Blog', href: '/blog' }, { title: 'Compose', href: '#' }]}>
@@ -132,79 +135,86 @@ export default function Create() {
                 <div className="flex-1 flex flex-col h-full overflow-y-auto custom-scrollbar relative">
                     
                     {/* Top Toolbar */}
-                    <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-                        <Link href="/blog" className="text-gray-400 hover:text-gray-600 transition-colors">
-                            <ArrowLeft className="w-6 h-6" />
+                    <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+                        <Link href="/blog" className="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#37368b] transition-colors">
+                            <ArrowLeft className="w-4 h-4" />
+                            Back
                         </Link>
                         
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                             <button 
                                 onClick={() => setShowSettings(!showSettings)}
-                                className={`p-2 rounded-full transition-colors ${showSettings ? 'bg-gray-100 text-gray-900' : 'text-gray-400 hover:text-gray-600'}`}
-                                title="Post Settings"
+                                className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider transition-colors ${showSettings ? 'text-[#37368b]' : 'text-gray-400 hover:text-gray-600'}`}
                             >
-                                <Settings className="w-5 h-5" />
+                                <Settings className="w-4 h-4" />
+                                Settings
                             </button>
-                            <div className="h-6 w-px bg-gray-200 mx-1"></div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                                {data.is_published ? 'Published' : 'Draft'}
-                            </span>
+                            
+                            <div className="h-4 w-px bg-gray-200"></div>
+                            
+                            {data.is_published ? (
+                                <span className="text-[10px] font-extrabold uppercase tracking-widest text-green-600 bg-green-50 px-2 py-1 rounded">Published</span>
+                            ) : (
+                                <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-600 bg-amber-50 px-2 py-1 rounded">Draft</span>
+                            )}
                         </div>
                     </div>
 
-                    <div className="max-w-3xl w-full mx-auto px-6 pb-20 mt-8">
+                    <div className="max-w-3xl w-full mx-auto px-8 pb-32 mt-10">
                         
                         {/* 1. Cover Image Banner */}
-                        <div className="group relative mb-8 rounded-2xl overflow-hidden bg-gray-50 border border-dashed border-gray-200 hover:border-gray-300 transition-all min-h-[160px] flex flex-col items-center justify-center">
+                        <div className="group relative mb-10 rounded-2xl overflow-hidden bg-gray-50 border-2 border-dashed border-gray-200 hover:border-[#37368b]/30 transition-all min-h-[200px] flex flex-col items-center justify-center">
                             {preview ? (
                                 <>
                                     <img src={preview} alt="Cover" className="w-full h-auto max-h-[400px] object-cover" />
                                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <label htmlFor="cover_upload" className="bg-white/90 hover:bg-white text-gray-700 p-2 rounded-lg shadow-sm cursor-pointer backdrop-blur-sm">
+                                        <label htmlFor="cover_upload" className="bg-white hover:text-[#37368b] text-gray-600 p-2.5 rounded-xl shadow-lg cursor-pointer transition-all">
                                             <ImageIcon className="w-4 h-4" />
                                         </label>
-                                        <button onClick={removeImage} className="bg-white/90 hover:bg-white text-red-500 p-2 rounded-lg shadow-sm backdrop-blur-sm">
+                                        <button onClick={removeImage} className="bg-white hover:text-red-500 text-gray-600 p-2.5 rounded-xl shadow-lg transition-all">
                                             <X className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </>
                             ) : (
-                                <label htmlFor="cover_upload" className="cursor-pointer w-full h-full flex flex-col items-center justify-center py-10">
-                                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-3 text-gray-400 group-hover:text-[#37368b] group-hover:scale-110 transition-all">
+                                <label htmlFor="cover_upload" className="cursor-pointer w-full h-full flex flex-col items-center justify-center py-12">
+                                    <div className="w-14 h-14 bg-white rounded-full shadow-sm border border-gray-100 flex items-center justify-center mb-3 text-gray-400 group-hover:text-[#37368b] group-hover:scale-110 transition-all">
                                         <ImageIcon className="w-6 h-6" />
                                     </div>
-                                    <span className="text-sm font-bold text-gray-500 group-hover:text-gray-700">Add a cover image</span>
+                                    <span className="text-sm font-bold text-gray-500 group-hover:text-gray-800">Add Cover Image</span>
                                 </label>
                             )}
                             <input type="file" onChange={handleImageChange} className="hidden" id="cover_upload" accept="image/*" />
                         </div>
 
                         {/* 2. Title Input */}
-                        <div className="mb-6">
+                        <div className="mb-8">
                             <textarea 
                                 placeholder="Post Title" 
                                 value={data.title}
                                 onChange={e => setData('title', e.target.value)}
-                                className="w-full text-4xl md:text-5xl font-extrabold text-gray-900 border-none focus:ring-0 placeholder-gray-300 px-0 bg-transparent resize-none overflow-hidden leading-tight"
+                                className="w-full text-4xl md:text-5xl font-extrabold text-gray-900 border-none focus:ring-0 placeholder-gray-300 px-0 bg-transparent resize-none overflow-hidden leading-tight tracking-tight"
                                 rows={1}
                                 onInput={(e) => {
                                     e.currentTarget.style.height = 'auto';
                                     e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
                                 }}
                             />
-                            {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title}</p>}
+                            {errors.title && <p className="text-red-500 text-xs font-bold mt-2 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.title}</p>}
                         </div>
 
-                        {/* 3. Settings / Metadata (Conditional) */}
+                        {/* 3. Settings (Metadata) */}
                         {showSettings && (
-                            <div className="mb-8 p-6 bg-gray-50 rounded-xl animate-in slide-in-from-top-2 border border-gray-100">
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Post Metadata</h3>
+                            <div className="mb-10 p-6 bg-gray-50 rounded-2xl animate-in slide-in-from-top-4 border border-gray-100">
+                                <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <PenTool className="w-3 h-3" /> Post Metadata
+                                </h3>
                                 <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Excerpt / Summary</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Excerpt / Summary</label>
                                     <textarea 
                                         value={data.excerpt}
                                         onChange={e => setData('excerpt', e.target.value)}
-                                        className="w-full rounded-lg border-gray-200 text-sm focus:border-[#37368b] focus:ring-[#37368b]"
+                                        className="w-full rounded-xl border-gray-200 text-sm font-medium text-gray-700 focus:border-[#37368b] focus:ring-1 focus:ring-[#37368b] bg-white p-3"
                                         rows={3}
                                         placeholder="A short summary for search results and previews..."
                                     />
@@ -221,7 +231,7 @@ export default function Create() {
                             />
                         </div>
                         {errors.content && (
-                            <div className="flex items-center gap-2 text-red-500 text-sm mt-2">
+                            <div className="flex items-center gap-2 text-red-500 text-sm font-bold mt-4 bg-red-50 p-3 rounded-xl">
                                 <AlertCircle className="w-4 h-4" />
                                 {errors.content}
                             </div>
@@ -230,15 +240,15 @@ export default function Create() {
                     </div>
 
                     {/* Bottom Action Bar (Mobile Sticky) */}
-                    <div className="sticky bottom-0 z-20 bg-white border-t border-gray-100 px-6 py-4 flex items-center justify-between lg:hidden">
-                        <span className="text-xs text-gray-400 font-medium">
+                    <div className="sticky bottom-0 z-20 bg-white border-t border-gray-100 px-6 py-4 flex items-center justify-between lg:hidden shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                        <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">
                             {data.content ? data.content.split(' ').length : 0} words
                         </span>
                         <div className="flex gap-3">
-                            <button onClick={() => handleSubmit(false)} disabled={processing} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
+                            <button onClick={() => handleSubmit(false)} disabled={processing} className="p-3 text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
                                 <Save className="w-5 h-5" />
                             </button>
-                            <button onClick={() => handleSubmit(true)} disabled={processing} className="px-4 py-2 bg-[#37368b] text-white rounded-full font-bold text-sm">
+                            <button onClick={() => handleSubmit(true)} disabled={processing} className="px-6 py-3 bg-[#37368b] text-white rounded-xl font-bold text-sm shadow-lg">
                                 Publish
                             </button>
                         </div>
@@ -250,28 +260,30 @@ export default function Create() {
                     
                     {/* Preview Header */}
                     <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-white/50 backdrop-blur-md">
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-                            <FileText className="w-4 h-4" /> Live Preview
+                        <h2 className="text-xs font-extrabold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-[#37368b]" /> Live Preview
                         </h2>
-                        <span className="text-xs text-gray-400">{data.content ? data.content.split(' ').length : 0} words</span>
+                        <span className="text-[10px] font-bold text-gray-400 bg-gray-200/50 px-2 py-1 rounded-md">
+                            {data.content ? data.content.split(' ').length : 0} words
+                        </span>
                     </div>
 
                     {/* Device Frame */}
-                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                        <div className="bg-white rounded-[2rem] border-[8px] border-gray-800 shadow-2xl min-h-[600px] overflow-hidden relative mx-auto max-w-[340px]">
+                    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar bg-gray-50/50">
+                        <div className="bg-white rounded-[2.5rem] border-[10px] border-gray-900 shadow-2xl min-h-[650px] overflow-hidden relative mx-auto max-w-[360px]">
                             {/* Notch */}
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-6 bg-gray-800 rounded-b-xl z-10"></div>
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-7 bg-gray-900 rounded-b-2xl z-10"></div>
                             
                             {/* Screen Content */}
-                            <div className="h-full overflow-y-auto custom-scrollbar p-5 pt-10 pb-20">
+                            <div className="h-full overflow-y-auto custom-scrollbar p-6 pt-12 pb-20">
                                 {preview && (
-                                    <img src={preview} alt="Preview" className="w-full h-40 object-cover rounded-lg mb-4 shadow-sm" />
+                                    <img src={preview} alt="Preview" className="w-full h-48 object-cover rounded-xl mb-6 shadow-sm" />
                                 )}
-                                <h1 className="text-xl font-bold text-gray-900 leading-tight mb-3">
+                                <h1 className="text-2xl font-extrabold text-gray-900 leading-tight mb-4 tracking-tight">
                                     {data.title || "Your Title Here"}
                                 </h1>
-                                <div className="prose prose-sm prose-blue max-w-none">
-                                    <ReactMarkdown>{data.content || "Start typing to see preview..."}</ReactMarkdown>
+                                <div className="prose prose-sm prose-blue max-w-none text-gray-600 leading-relaxed">
+                                    <ReactMarkdown>{data.content || "*Start typing to see how your post looks...*"}</ReactMarkdown>
                                 </div>
                             </div>
                         </div>
@@ -283,21 +295,21 @@ export default function Create() {
                             <button 
                                 onClick={() => handleSubmit(true)} 
                                 disabled={processing}
-                                className="w-full py-3 bg-[#37368b] hover:bg-[#2a2970] text-white rounded-xl font-bold shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5"
+                                className="w-full py-3.5 bg-[#37368b] hover:bg-[#2a2970] text-white rounded-xl font-bold text-sm shadow-xl shadow-indigo-900/20 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5 active:scale-95"
                             >
-                                <Send className="w-4 h-4" /> Publish Now
+                                <Send className="w-4 h-4" /> Publish Post
                             </button>
                             <button 
                                 onClick={() => handleSubmit(false)} 
                                 disabled={processing}
-                                className="w-full py-3 text-gray-600 font-bold hover:bg-gray-50 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                                className="w-full py-3.5 text-gray-600 font-bold text-sm bg-gray-50 hover:bg-gray-100 rounded-xl flex items-center justify-center gap-2 transition-colors"
                             >
-                                <Save className="w-4 h-4" /> Save as Draft
+                                <Save className="w-4 h-4" /> Save Draft
                             </button>
                         </div>
-                        <div className="text-center mt-3">
-                            <p className="text-xs text-gray-400">
-                                {processing ? 'Saving changes...' : 'Last saved just now'}
+                        <div className="text-center mt-4">
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                {processing ? 'Saving changes...' : 'Auto-saved just now'}
                             </p>
                         </div>
                     </div>

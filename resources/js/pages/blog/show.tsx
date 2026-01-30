@@ -1,6 +1,5 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
 import ReactMarkdown from 'react-markdown';
 import { 
     Clock, 
@@ -10,6 +9,7 @@ import {
     Share2, 
     MessageCircle 
 } from 'lucide-react';
+import Navbar from '@/components/ui/NavHome';
 
 // 1. Defined Interface for better type safety
 interface BlogPost {
@@ -46,7 +46,8 @@ export default function Show({ blog }: Props) {
     });
 
     return (
-        <AppLayout breadcrumbs={[{ title: 'Blog', href: '/blog' }, { title: blog.title || 'Post', href: '#' }]}>
+        <>
+        <Navbar />
             <Head title={blog.title} />
 
             <div className="max-w-5xl  mx-auto py-10 px-4 sm:px-6 lg:px-8">
@@ -141,6 +142,6 @@ export default function Show({ blog }: Props) {
                 </div>
 
             </div>
-        </AppLayout>
+        </>
     );
 }

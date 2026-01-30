@@ -56,9 +56,9 @@ export default function Dashboard() {
     };
 
     const quickActions = [
-        { title: 'Course Materials', icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', href: '/classes' },
+        { title: 'Weekly Classes', icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', href: '/classes' },
         { title: 'Check Results', icon: GraduationCap, color: 'text-emerald-600', bg: 'bg-emerald-50', href: '/results' },
-        { title: 'Fee Payment', icon: CreditCard, color: 'text-amber-600', bg: 'bg-amber-50', href: '#' },
+        { title: 'Daily Schedule', icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50', href: '/schedule' },
         { title: 'Update Profile', icon: User, color: 'text-purple-600', bg: 'bg-purple-50', href: '/settings/profile' },
     ];
 
