@@ -42,7 +42,7 @@ class AttendanceController extends Controller
 
 
  $dailyTrends = Attendance::query()
-    // ->where('student_id', auth()->id())
+    ->where('student_id', auth()->id())
     // Filter by date range
     ->whereDate('date', '>=', $startDate)
     ->whereDate('date', '<=', $endDate)
