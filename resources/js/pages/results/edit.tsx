@@ -224,13 +224,8 @@ const EditResult: React.FC<Props> = ({ result }) => {
                                                 
                                                 {/* Subject Name */}
                                                 <div className="col-span-6 md:col-span-5">
-                                                    {isExisting ? (
-                                                        // READ ONLY LOOK for Existing
-                                                        <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm font-bold text-gray-500 shadow-sm cursor-not-allowed">
-                                                            {subject.name}
-                                                        </div>
-                                                    ) : (
-                                                        // EDITABLE INPUT for New
+                                                 
+                            
                                                         <input
                                                             type="text"
                                                             placeholder="Enter Subject Name"
@@ -242,7 +237,7 @@ const EditResult: React.FC<Props> = ({ result }) => {
                                                             }}
                                                             className="w-full border-none bg-transparent p-0 text-sm font-bold text-gray-900 placeholder-gray-400 focus:ring-0"
                                                         />
-                                                    )}
+                                
                                                 </div>
 
                                                 {/* CA Score */}

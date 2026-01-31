@@ -219,6 +219,7 @@ public function manage(Request $request)
             $result->subjects()
                 ->where('id', $sub['id']) 
                 ->update([
+                    'subject_name' => $sub['name'],
                     'ca_score'   => $sub['ca_score'],
                     'exam_score' => $sub['exam_score'],
                     'total'      => $total,
@@ -227,9 +228,7 @@ public function manage(Request $request)
 
         } else {
 
-            // --- B. CREATE NEW ---
-            // No ID means it's a new row added in the frontend.
-            // Note: Frontend sends 'name', DB expects 'subject_name'
+          
             $result->subjects()->create([
                 'subject_name' => $sub['name'], 
                 'ca_score'     => $sub['ca_score'],
