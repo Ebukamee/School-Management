@@ -243,7 +243,7 @@ export default function Results({ results = [] }: Props) {
                                 {/* Subjects Table (Web Colorful Ver) */}
                                 <div className="p-8">
                                     <h4 className="text-sm font-extrabold text-gray-900 uppercase tracking-widest mb-6 border-l-4 border-[#37368b] pl-3">Subject Breakdown</h4>
-                                    <div className="overflow-hidden rounded-xl border border-gray-200">
+                                    <div className="overflow-scroll rounded-xl border border-gray-200">
                                         <table className="w-full text-sm">
                                             <thead>
                                                 <tr className="bg-gray-50 border-b border-gray-200">
