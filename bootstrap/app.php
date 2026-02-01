@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'teacher' => \App\Http\Middleware\TeacherOnly::class,
             'student' => \App\Http\Middleware\StudentOnly::class,
             'admin'   => \App\Http\Middleware\AdminOnly::class,
+            'teacher_student' => \App\Http\Middleware\TeacherOrStudent::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
@@ -41,7 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
             $validStatuses = [500, 503, 404, 403];
             // use next line later in production
             // if (! app()->environment('local') && in_array($response->getStatusCode(), $validStatuses))
-            
+
            if (in_array($response->getStatusCode(), [500, 503, 404, 403])) {
                 return Inertia::render('errors', ['status' => $response->getStatusCode()])
                     ->toResponse($request)

@@ -15,14 +15,12 @@ use Laravel\Fortify\Features;
 use App\Models\SchoolClass;
 use Illuminate\Support\Str;
 
+
+// Home Route
 Route::get('/', function () {
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
-
-
-
-
-    'posts' => Blog::where('is_published', true)
+        'posts' => Blog::where('is_published', true)
             ->latest()
             ->take(6) // Limit to 6 for the home page
             ->get()
@@ -39,21 +37,10 @@ Route::get('/', function () {
                 ];
             }),
     ]);
-
-
-
-
 })->name('home');
-Route::get('/register', function () {
-    $nextAvailable = RegNumber::where('is_used', false)
-        ->orderBy('id', 'asc')
-        ->first();
 
-    // 2. Pass it to the React Page
-    return Inertia::render('auth/register', [
-        'nextAvailableReg' => $nextAvailable ? $nextAvailable->reg_number : null
-    ]);
-})->name('register');
+
+// Static pages routes
 Route::get('/academics', function () {
     return Inertia::render('academics');
 })->name('academics');
@@ -66,41 +53,18 @@ Route::get('contact', function () {
 Route::get('/student-life', function () {
     return Inertia::render('school_life');
 })->name('student-life');
-Route::get('/schedule', function () {
-    $today = date('l');
 
-    // Concatenate form and class exactly as you had it (e.g., "JSS1A")
-    $gradeLevel = auth()->user()->form . auth()->user()->class;
-
-    $classes = SchoolClass::where('grade_level', $gradeLevel)
-        ->where('day', $today)
-        ->orderBy('start_time')
-        ->get();
-
-    $homeworks = HomeWork::where('form', auth()->user()->form)
-        ->where('class', auth()->user()->class)
-        ->whereDate('due_date', now()) 
-        ->orderBy('title', 'asc')    
-        ->get();
-
-    // Kept your requested path: 'schedule/index'
-    return Inertia::render('schedule/index', [
-        'classes' => $classes,
-        'homework' => $homeworks
+// Registration route with next available reg number
+Route::get('/register', function () {
+    $nextAvailable = RegNumber::where('is_used', false)
+        ->orderBy('id', 'asc')
+        ->first();
+    return Inertia::render('auth/register', [
+        'nextAvailableReg' => $nextAvailable ? $nextAvailable->reg_number : null
     ]);
-})->name('schedule');
-Route::post('/blog', [BlogController::class, 'store'])->name('blog.store');
-Route::get('/attendance/create', [App\Http\Controllers\AttendanceController::class, 'create'])->name('attendance.create');
-Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'stats'])->name('attendance.stats');
-Route::post('/attendance', [App\Http\Controllers\AttendanceController::class, 'store'])->name('attendance.store');
-Route::get('/attendance/manage', [AttendanceController::class, 'manage'])->name('attendance.manage');
-Route::get('/attendance/edit', [AttendanceController::class, 'edit'])->name('attendance.edit');
-Route::get('/blog/create', [BlogController::class,'create'])->name('blog.create');
-Route::get('/blog', [BlogController::class,'index'])->name('blog.index');
+})->name('register');
 
-// Route::middleware(['auth'])->group(function () {
-//     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
-// });
+// General Auth middleware guarded routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', function () {
         $user = auth()->user();
@@ -118,49 +82,103 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'todaysClasses' => $todaysClasses,
             'blogs' => $info
         ]);
-        
-        
     })->name('dashboard');
-    Route::middleware(['auth', 'student'])->group(function () {
-        Route::get('results', [ResultsController::class, 'index'])->name('results.index');
-    });
-    Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');
 });
-Route::middleware(['auth'])->group(function () {
-    Route::get('/blog/drafts', [BlogController::class, 'drafts'])->name('blog.drafts');
-    Route::get('/blog/manage', [BlogController::class, 'manage'])->name('blog.manage');
-    Route::delete('/blog/{slug}', [BlogController::class, 'destroy'])->name('blog.destroy');
-     
-    Route::get('/blog/{slug}/edit', [BlogController::class, 'edit'])->name('blog.edit');
-    
-    Route::put('/blog/{slug}', [BlogController::class, 'update'])->name('blog.update');
 
-});
-Route::get('/blog/{slug}', [BlogController::class,'show'])->name('blog.show');
-Route::put('/allowed-numbers/{reg_number}', [RegNumberController::class, 'update'])
-    ->name('reg_numbers.update');
-// Route::get('/homework/{id}', [HomeWorkController::class, 'show'])->name('homework.show');
-Route::get('/homework', [HomeWorkController::class, 'index'])->name('homework.index');
+// Role-based routes
+
+// Teacher Specific Routes
+
 Route::middleware(['auth', 'teacher'])->group(function () {
-    Route::get('/allowed-numbers', [RegNumberController::class, 'index'])->name('reg_numbers.index');
-    Route::get('/homework/create', [HomeWorkController::class, 'create'])->name('homework.create');
-    Route::post('/homework', [HomeWorkController::class, 'store'])->name('homework.store');
-    Route::post('/allowed-numbers', [RegNumberController::class, 'store'])->name('reg_numbers.store');
-    Route::delete('/allowed-numbers/{id}', [RegNumberController::class, 'destroy'])->name('reg_numbers.destroy');
-    Route::get('/allowed-numbers/create', [RegNumberController::class, 'create'])->name('reg_numbers.create');
-    Route::get('/results/manage', [ResultsController::class, 'manage'])->name('results.manage');
+
+    Route::get('/attendance/create', [App\Http\Controllers\AttendanceController::class, 'create'])->name('attendance.create');
+    Route::post('/attendance', [App\Http\Controllers\AttendanceController::class, 'store'])->name('attendance.store');
+    Route::get('/attendance/manage', [AttendanceController::class, 'manage'])->name('attendance.manage');
+    Route::get('/attendance/edit', [AttendanceController::class, 'edit'])->name('attendance.edit');
     Route::get('/results/{id}/edit', [ResultsController::class, 'edit'])->name('results.edit');
     Route::put('/results/{id}', [ResultsController::class, 'update'])->name('results.update');
     Route::get('classes/create', [ClassesController::class, 'create'])->name('classes.create');
     Route::post('classes', [ClassesController::class, 'store'])->name('classes.store');
     Route::get('results/create', [ResultsController::class, 'create'])->name('results.create');
+    Route::get('/results/manage', [ResultsController::class, 'manage'])->name('results.manage');
     Route::post('results', [ResultsController::class, 'store'])->middleware(['auth', 'verified'])->name('results.store');
-   Route::get('/homework/manage', [HomeWorkController::class, 'manage'])->name('homework.manage');
-   Route::get('/homework/{id}/edit', [HomeWorkController::class, 'edit'])->name('homework.edit');
-   Route::put('/homework/{id}', [HomeWorkController::class, 'update'])->name('homework.update');
-    Route::get('/homework/{id}', [HomeWorkController::class, 'show'])->name('homework.show');
+    Route::get('/homework/manage', [HomeWorkController::class, 'manage'])->name('homework.manage');
+    Route::get('/homework/create', [HomeWorkController::class, 'create'])->name('homework.create');
+    Route::post('/homework', [HomeWorkController::class, 'store'])->name('homework.store');
+    Route::get('/homework/{id}/edit', [HomeWorkController::class, 'edit'])->name('homework.edit');
+    Route::put('/homework/{id}', [HomeWorkController::class, 'update'])->name('homework.update');
     Route::delete('/homework/{id}', [HomeWorkController::class, 'destroy'])->name('homework.destroy');
+
 });
+
+// Student Specific Routes
+Route::middleware(['auth', 'student'])->group(function () {
+    Route::get('/attendance', [App\Http\Controllers\AttendanceController::class, 'stats'])->name('attendance.stats');
+    Route::get('results', [ResultsController::class, 'index'])->name('results.index');
+    Route::get('/homework', [HomeWorkController::class, 'index'])->name('homework.index');
+    Route::get('/homework/{id}', [HomeWorkController::class, 'show'])->name('homework.show');
+
+});
+
+
+// Teacher or Student Routes
+Route::middleware(['auth', 'teacher_student'])->group(function () {
+  Route::get('/schedule', function () {
+    $today = date('l');
+
+    // Concatenate form and class exactly as you had it (e.g., "JSS1A")
+    $gradeLevel = auth()->user()->form . auth()->user()->class;
+
+    $classes = SchoolClass::where('grade_level', $gradeLevel)
+        ->where('day', $today)
+        ->orderBy('start_time')
+        ->get();
+
+    $homeworks = HomeWork::where('form', auth()->user()->form)
+        ->where('class', auth()->user()->class)
+        ->whereDate('due_date', now())
+        ->orderBy('title', 'asc')
+        ->get();
+
+    // Kept your requested path: 'schedule/index'
+    return Inertia::render('schedule/index', [
+        'classes' => $classes,
+        'homework' => $homeworks
+    ]);
+})->name('schedule');
+Route::get('classes', [ClassesController::class, 'index'])->name('classes.index');
+
+});
+
+
+// Admin Specific Routes
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/blog/create', [BlogController::class, 'create'])->name('blog.create');
+    Route::post('/blog', [BlogController::class, 'store'])->name('blog.store');
+    Route::get('/blog/drafts', [BlogController::class, 'drafts'])->name('blog.drafts');
+    Route::get('/blog/manage', [BlogController::class, 'manage'])->name('blog.manage');
+    Route::delete('/blog/{slug}', [BlogController::class, 'destroy'])->name('blog.destroy');
+
+    Route::get('/blog/{slug}/edit', [BlogController::class, 'edit'])->name('blog.edit');
+
+    Route::put('/blog/{slug}', [BlogController::class, 'update'])->name('blog.update');
+    Route::put('/allowed-numbers/{reg_number}', [RegNumberController::class, 'update'])
+        ->name('reg_numbers.update');
+    Route::get('/allowed-numbers', [RegNumberController::class, 'index'])->name('reg_numbers.index');
+    Route::post('/allowed-numbers', [RegNumberController::class, 'store'])->name('reg_numbers.store');
+    Route::delete('/allowed-numbers/{id}', [RegNumberController::class, 'destroy'])->name('reg_numbers.destroy');
+    Route::get('/allowed-numbers/create', [RegNumberController::class, 'create'])->name('reg_numbers.create');
+    Route::get('/results/manage', [ResultsController::class, 'manage'])->name('results.manage');
+
+
+});
+
+// Blog public routes
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+
+
 
 
 require __DIR__ . '/settings.php';
