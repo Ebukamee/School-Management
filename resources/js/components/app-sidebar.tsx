@@ -23,7 +23,14 @@ import {
     PlusCircle, 
     FileEdit, 
     List, 
-    ChevronRight 
+    ChevronRight ,
+    ClipboardCheck,
+    BookOpen,
+    Newspaper, 
+    FileText,  
+    Send,      
+    Hash,      
+    Settings   
 } from 'lucide-react';
 import AppLogoIcon from './app-logo-icon';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -33,61 +40,122 @@ export function AppSidebar() {
     const { auth } = page.props;
     const currentUrl = page.url;
     const user = auth.user;
-    const isTeacherOrAdmin = user.role === 'teacher' || user.role === 'admin';
+    const isTeacher = user.role === 'teacher' ;
+    const isAdmin = user.role === 'admin' ;
+    const isStudent = user.role === 'student' ;
+    const isStudentOrTeacher = isTeacher || isStudent;
     const { state } = useSidebar();
 
     // --- HELPER: Active State Logic ---
     // Checks if the current URL starts with the link href
     const isActive = (href: string) => currentUrl.startsWith(href);
 
-    // --- NAVIGATION CONFIG ---
-    const navItems = [
-        { 
-            title: 'Dashboard', 
-            href: '/dashboard', 
-            icon: LayoutGrid, 
-            active: currentUrl === '/dashboard' 
-        },
-        { 
-            title: 'Schedule', 
-            href: '/schedule', 
-            icon: Calendar, 
-            active: isActive('/schedule') 
-        },
-        
-        // Results Group
-        ...(isTeacherOrAdmin ? [{
-            title: 'Results',
-            icon: BarChart3,
-            isActive: isActive('/results'),
-            items: [
-                { title: 'Create Result', href: '/results/create', icon: PlusCircle },
-                { title: 'Update Results', href: '/results/manage', icon: FileEdit },
-            ]
-        }] : [{ title: 'Results', href: '/results', icon: BarChart3, active: isActive('/results') }]),
+const navItems = [
+    // 1. MUTUAL FOR EVERYONE (Teacher, Student, Admin)
+    { 
+        title: 'Dashboard', 
+        href: '/dashboard', 
+        icon: LayoutGrid, 
+        active: currentUrl === '/dashboard' 
+    },
 
-        // Classes Group
-        ...(isTeacherOrAdmin ? [{
-            title: 'Classes',
-            icon: Users,
-            isActive: isActive('/classes'),
-            items: [
-                { title: 'View Classes', href: '/classes', icon: List },
-                { title: 'Create Class', href: '/classes/create', icon: PlusCircle },
-            ]
-        }] : [{ title: 'Classes', href: '/classes', icon: Users, active: isActive('/classes') }]),
+    // 2. MUTUAL FOR TEACHER & STUDENT ONLY (Hidden from Admin)
+    ...(!isAdmin ? [{ 
+        title: 'Schedule', 
+        href: '/schedule', 
+        icon: Calendar, 
+        active: isActive('/schedule') 
+    }] : []),
 
-        // Homework Group
-        ...(isTeacherOrAdmin ? [{
-            title: 'Homework',
-            icon: Home,
-            isActive: isActive('/homework'),
+    // 3. CLASSES (Mutual presence, but different actions)
+    ...(isTeacher ? [{
+        title: 'Classes',
+        icon: Users,
+        active: isActive('/classes'),
+        items: [
+            { title: 'View Classes', href: '/classes', icon: List },
+            { title: 'Create Class', href: '/classes/create', icon: PlusCircle },
+        ]
+    }] : (isStudent ? [{ 
+        title: 'Classes', 
+        href: '/classes', 
+        icon: Users, 
+        active: isActive('/classes') 
+    }] : [])),
+
+    // 4. RESULTS (Teacher=Manage, Student=View)
+    ...(isTeacher ? [{
+        title: 'Results',
+        icon: BarChart3,
+        active: isActive('/results'),
+        items: [
+            { title: 'Create Result', href: '/results/create', icon: PlusCircle },
+            { title: 'Update Results', href: '/results/manage', icon: FileEdit },
+        ]
+    }] : (isStudent ? [{ 
+        title: 'Results', 
+        href: '/results', 
+        icon: BarChart3, 
+        active: isActive('/results') 
+    }] : [])),
+
+    // 5. ATTENDANCE (Teacher=Manage, Student=View)
+    ...(isTeacher ? [{
+        title: 'Attendance',
+        icon: ClipboardCheck,
+        active: isActive('/attendance'),
+        items: [
+            { title: 'Manage', href: '/attendance/manage', icon: FileEdit },
+            { title: 'Create', href: '/attendance/create', icon: PlusCircle },
+        ]
+    }] : (isStudent ? [{ 
+        title: 'Attendance', 
+        href: '/attendance', 
+        icon: ClipboardCheck,
+        active: isActive('/attendance') 
+    }] : [])),
+
+    // 6. HOMEWORK (Teacher=Manage, Student=View)
+    ...(isTeacher ? [{
+        title: 'Homework',
+        icon: BookOpen,
+        active: isActive('/homework'),
+        items: [
+            { title: 'Manage', href: '/homework/manage', icon: FileEdit },
+            { title: 'Create', href: '/homework/create', icon: PlusCircle },
+        ]
+    }] : (isStudent ? [{ 
+        title: 'Homework', 
+        href: '/homework', 
+        icon: BookOpen,
+        active: isActive('/homework') 
+    }] : [])),
+
+    // 7. ADMIN ONLY ROUTES
+    ...(isAdmin ? [
+        // Blog Management
+        {
+            title: 'School Blog',
+            icon: Newspaper,
+            active: isActive('/blog'),
             items: [
-                { title: 'Manage', href: '/homework/manage', icon: FileEdit },
-                { title: 'Create', href: '/homework/create', icon: PlusCircle },
+                { title: 'Create Post', href: '/blog/create', icon: PlusCircle },
+                { title: 'Drafts', href: '/blog/drafts', icon: FileText },
+                { title: 'Published', href: '/blog/published', icon: Send },
             ]
-        }] : [{ title: 'Homework', href: '/homework', icon: Home, active: isActive('/homework') }]),
-    ];
+        },
+        // Reg Number Management
+        {
+            title: 'Reg Numbers',
+            icon: Hash,
+            active: isActive('/allowed-numbers'),
+            items: [
+                { title: 'Generate New', href: '/allowed-numbers/create', icon: PlusCircle },
+                { title: 'Manage All', href: '/allowed-numbers', icon: Settings },
+            ]
+        }
+    ] : []),
+];
 
     return (
         <Sidebar 
