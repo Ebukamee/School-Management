@@ -27,7 +27,7 @@ interface BlogSectionProps {
 }
 
 const BlogSection = ({ blogPosts }: BlogSectionProps) => {
-    const containerRef = useRef<HTMLDivElement>(null); // Ref for GSAP scoping
+    const containerRef = useRef<HTMLDivElement>(null); 
     const [visiblePosts, setVisiblePosts] = useState<number>(6);
 
     // Animations
@@ -40,21 +40,25 @@ const BlogSection = ({ blogPosts }: BlogSectionProps) => {
             ease: "power3.out",
             scrollTrigger: {
                 trigger: containerRef.current,
-                start: "top 80%", // Start animation when top of section hits 80% of viewport
+                start: "top 80%", 
             }
         });
 
-        // 2. Animate Blog Cards (Staggered)
-        gsap.from(".anim-post", {
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.15, // Delay between each card
-            ease: "power3.out",
-            scrollTrigger: {
-                trigger: ".anim-grid",
-                start: "top 85%",
-            }
+        // 2. FIXED: Animate Blog Cards using Batch
+        // This fixes the grid issue by animating cards only when they scroll into view
+        ScrollTrigger.batch(".anim-post", {
+            onEnter: (batch) => {
+                gsap.from(batch, {
+                    y: 60,
+                    opacity: 0,
+                    stagger: 0.15,
+                    duration: 0.8,
+                    ease: "power3.out",
+                    clearProps: "all" // Removes transforms after animation to prevent layout bugs
+                });
+            },
+            start: "top 90%", // Starts animating when top of card hits 90% of viewport
+            once: true // Only animate once
         });
 
     }, { scope: containerRef });
@@ -73,6 +77,8 @@ const BlogSection = ({ blogPosts }: BlogSectionProps) => {
 
     const loadMore = () => {
         setVisiblePosts((prev) => prev + 3);
+        // We need to refresh ScrollTrigger after loading more posts so it detects the new elements
+        setTimeout(() => ScrollTrigger.refresh(), 100);
     };
 
     return (
@@ -106,7 +112,7 @@ const BlogSection = ({ blogPosts }: BlogSectionProps) => {
                 </div>
 
                 {/* Blog Grid */}
-                <div className="anim-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
                     {blogPosts.slice(0, visiblePosts).map((post) => (
                         <article
                             key={post.id}

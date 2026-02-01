@@ -24,6 +24,7 @@ const FAQ = () => {
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
     const [activeCategory, setActiveCategory] = useState<string>('all');
 
+    // CONTEXT: Updated for Nigerian Secondary School System
     const faqData: FAQItem[] = [
         {
             category: 'admissions',
@@ -91,7 +92,7 @@ const FAQ = () => {
 
     // --- ANIMATIONS ---
     useGSAP(() => {
-        // Animate Header
+        // 1. Animate Header
         gsap.from(".anim-faq-header", {
             y: 50,
             opacity: 0,
@@ -103,7 +104,24 @@ const FAQ = () => {
             }
         });
 
-        // Animate Contact Card
+        // 2. Animate FAQ List Items (Batched)
+        // This ensures the list cascades smoothly even if it's very long
+        ScrollTrigger.batch(".anim-faq-item", {
+            onEnter: (batch) => {
+                gsap.from(batch, {
+                    y: 30,
+                    opacity: 0,
+                    stagger: 0.1,
+                    duration: 0.6,
+                    ease: "power3.out",
+                    clearProps: "all"
+                });
+            },
+            start: "top 90%",
+            once: true
+        });
+
+        // 3. Animate Contact Card
         gsap.from(".anim-contact-card", {
             y: 100,
             opacity: 0,
@@ -116,17 +134,21 @@ const FAQ = () => {
             }
         });
 
-        // Animate Quick Info Cards Staggered
-        gsap.from(".anim-info-card", {
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.2,
-            ease: "power3.out",
-            scrollTrigger: {
-                trigger: ".anim-info-trigger",
-                start: "top 90%",
-            }
+        // 4. Animate Quick Info Cards (Batched Grid)
+        // Fixed the grid animation issue here
+        ScrollTrigger.batch(".anim-info-card", {
+            onEnter: (batch) => {
+                gsap.from(batch, {
+                    y: 50,
+                    opacity: 0,
+                    stagger: 0.2,
+                    duration: 0.8,
+                    ease: "power3.out",
+                    clearProps: "all"
+                });
+            },
+            start: "top 90%",
+            once: true
         });
 
     }, { scope: containerRef });
@@ -242,7 +264,7 @@ const FAQ = () => {
                 </div>
 
                 {/* Quick Info Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-5xl mx-auto ">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-5xl mx-auto">
                     <div className="anim-info-card group bg-white border border-gray-100 rounded-2xl p-8 hover:border-[#37368b]/20 hover:shadow-xl hover:shadow-indigo-900/5 transition-all text-center">
                         <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-[#37368b] transition-colors duration-300">
                             <Phone className="w-6 h-6 text-[#37368b] group-hover:text-white transition-colors duration-300" />
@@ -261,7 +283,7 @@ const FAQ = () => {
                         <p className="text-xs text-gray-400 mt-1 uppercase tracking-wide font-bold">Admissions Desk</p>
                     </div>
 
-                    <div className=" group bg-white border border-gray-100 rounded-2xl p-8 hover:border-[#37368b]/20 hover:shadow-xl hover:shadow-indigo-900/5 transition-all text-center">
+                    <div className="anim-info-card group bg-white border border-gray-100 rounded-2xl p-8 hover:border-[#37368b]/20 hover:shadow-xl hover:shadow-indigo-900/5 transition-all text-center">
                         <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-[#37368b] transition-colors duration-300">
                             <MapPin className="w-6 h-6 text-[#37368b] group-hover:text-white transition-colors duration-300" />
                         </div>
