@@ -141,7 +141,7 @@ const navItems = [
             items: [
                 { title: 'Create Post', href: '/blog/create', icon: PlusCircle },
                 { title: 'Drafts', href: '/blog/drafts', icon: FileText },
-                { title: 'Published', href: '/blog/published', icon: Send },
+                { title: 'Published', href: '/blog/manage', icon: Send },
             ]
         },
         // Reg Number Management
