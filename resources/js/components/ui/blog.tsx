@@ -1,327 +1,199 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { Link } from '@inertiajs/react';
+import { Newspaper, ChevronRight, Clock, Calendar } from 'lucide-react';
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+// Register GSAP ScrollTrigger
+gsap.registerPlugin(ScrollTrigger);
+
+// 1. Define the interface
 interface BlogPost {
-  id: number;
-  title: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  authorRole: string;
-  date: string;
-  category: string;
-  image: string;
-  readTime: string;
-  featured?: boolean;
+    id: number;
+    title: string;
+    excerpt: string;
+    slug: string;
+    author: string;
+    date: string;
+    image: string;
+    readTime: string;
+    category?: string;
 }
 
-const BlogSection = () => {
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [visiblePosts, setVisiblePosts] = useState<number>(6);
+// 2. Define Props
+interface BlogSectionProps {
+    blogPosts: BlogPost[];
+}
 
-  const blogPosts: BlogPost[] = [
-    {
-      id: 1,
-      title: "Northwood Students Achieve Record AP Scores",
-      excerpt: "Advanced Placement exam results show exceptional performance, with 92% scoring 3 or higher across all subjects.",
-      content: "Full content about AP achievements...",
-      author: "Dr. Michael Chen",
-      authorRole: "Director of Academic Affairs",
-      date: "March 15, 2024",
-      category: "academics",
-      image: "https://images.unsplash.com/photo-1588072432836-e10032774350?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-      readTime: "4 min",
-      featured: true
-    },
-    {
-      id: 2,
-      title: "STEM Symposium Showcases Student Innovation",
-      excerpt: "Students present cutting-edge research projects in mathematics and engineering, demonstrating advanced problem-solving skills.",
-      content: "Full content about STEM symposium...",
-      author: "Ms. Patricia Roberts",
-      authorRole: "Math Department Chair",
-      date: "March 12, 2024",
-      category: "academics",
-      image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-      readTime: "3 min"
-    },
-    {
-      id: 3,
-      title: "Debate Team Qualifies for National Tournament",
-      excerpt: "After rigorous competition, our debate team secured first place in regional championships, advancing to national level.",
-      content: "Full content about debate team...",
-      author: "Mr. James Wilson",
-      authorRole: "Debate Team Coach",
-      date: "March 10, 2024",
-      category: "academics",
-      image: "https://images.unsplash.com/photo-1584697964358-3e14ca57658b?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-      readTime: "5 min"
-    },
-    {
-      id: 4,
-      title: "Class of 2024 College Acceptance Results",
-      excerpt: "Seniors receive acceptances from 95 colleges with scholarship offers exceeding $8.5 million.",
-      content: "Full content about college acceptances...",
-      author: "Ms. Emily Watson",
-      authorRole: "College Counseling Director",
-      date: "March 8, 2024",
-      category: "college",
-      image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-      readTime: "6 min"
-    },
-    {
-      id: 5,
-      title: "Science Olympiad Advances to State Competition",
-      excerpt: "Students earn top honors in regional Science Olympiad with exceptional knowledge in biology, chemistry, and physics.",
-      content: "Full content about Science Olympiad...",
-      author: "Dr. Robert Kim",
-      authorRole: "Science Department Chair",
-      date: "March 5, 2024",
-      category: "academics",
-      image: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-      readTime: "4 min"
-    },
-    {
-      id: 6,
-      title: "Literary Magazine Receives National Recognition",
-      excerpt: "Student-run publication earns three national awards for excellence in creative writing and design.",
-      content: "Full content about literary magazine...",
-      author: "Ms. Jennifer Lee",
-      authorRole: "English Department Chair",
-      date: "March 3, 2024",
-      category: "arts",
-      image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-      readTime: "3 min"
-    },
-    {
-      id: 7,
-      title: "Student Government Organizes Annual Food Drive",
-      excerpt: "Northwood students collect 2,000 pounds of food for local community shelters.",
-      content: "Full content about community service...",
-      author: "Mr. David Park",
-      authorRole: "Student Activities Director",
-      date: "February 28, 2024",
-      category: "community",
-      image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-      readTime: "3 min"
-    },
-    {
-      id: 8,
-      title: "Robotics Team Wins Innovation Award",
-      excerpt: "Team Hawkbotics demonstrates engineering excellence with autonomous robot design at regional competition.",
-      content: "Full content about robotics team...",
-      author: "Dr. Robert Kim",
-      authorRole: "STEM Coordinator",
-      date: "February 25, 2024",
-      category: "academics",
-      image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-      readTime: "4 min"
+const BlogSection = ({ blogPosts }: BlogSectionProps) => {
+    const containerRef = useRef<HTMLDivElement>(null); // Ref for GSAP scoping
+    const [visiblePosts, setVisiblePosts] = useState<number>(6);
+
+    // Animations
+    useGSAP(() => {
+        // 1. Animate Header Elements
+        gsap.from(".anim-header", {
+            y: 50,
+            opacity: 0,
+            duration: 1,
+            ease: "power3.out",
+            scrollTrigger: {
+                trigger: containerRef.current,
+                start: "top 80%", // Start animation when top of section hits 80% of viewport
+            }
+        });
+
+        // 2. Animate Blog Cards (Staggered)
+        gsap.from(".anim-post", {
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.15, // Delay between each card
+            ease: "power3.out",
+            scrollTrigger: {
+                trigger: ".anim-grid",
+                start: "top 85%",
+            }
+        });
+
+    }, { scope: containerRef });
+
+    // Empty State
+    if (!blogPosts || blogPosts.length === 0) {
+        return (
+            <div className="py-24 text-center bg-[#f8f9fc]">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Newspaper className="w-8 h-8 text-gray-300" />
+                </div>
+                <p className="text-gray-400 font-bold uppercase tracking-wider text-sm">No news updates posted yet.</p>
+            </div>
+        );
     }
-  ];
 
-  const categories = [
-    { id: 'all', label: 'All News' },
-    { id: 'academics', label: 'Academics' },
-    { id: 'athletics', label: 'Athletics' },
-    { id: 'arts', label: 'Arts' },
-    { id: 'community', label: 'Community' },
-    { id: 'college', label: 'College' }
-  ];
+    const loadMore = () => {
+        setVisiblePosts((prev) => prev + 3);
+    };
 
-  const featuredPost = blogPosts.find(post => post.featured);
-  const filteredPosts = activeCategory === 'all' 
-    ? blogPosts.filter(post => !post.featured)
-    : blogPosts.filter(post => post.category === activeCategory && !post.featured);
-
-  const displayedPosts = filteredPosts.slice(0, visiblePosts);
-
-  const loadMore = () => {
-    setVisiblePosts(prev => prev + 3);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  return (
-    <section className="py-16 lg:py-24 bg-white">
-      <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full mb-4">
-            <div className="w-2 h-2 bg-[#37368b] rounded-full"></div>
-            <span className="text-sm font-medium text-gray-600 uppercase tracking-wide">School News</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
-            Latest Updates
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Stay informed about the latest achievements, events, and announcements from Northwood
-          </p>
-        </div>
-
-        {/* Category Filters */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => {
-                setActiveCategory(category.id);
-                setVisiblePosts(6);
-              }}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeCategory === category.id
-                  ? 'bg-[#37368b] text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900'
-              }`}
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Featured Post - Modern Design */}
-        {featuredPost && activeCategory === 'all' && (
-          <div className="mb-16">
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-colors">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-                <div className="relative">
-                  <img
-                    src={featuredPost.image}
-                    alt={featuredPost.title}
-                    className="w-full h-64 lg:h-full object-cover"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-[#37368b] text-white px-3 py-1.5 rounded-full text-xs font-medium">
-                      Featured
-                    </span>
-                  </div>
-                </div>
-                <div className="p-6 lg:p-8">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-xs font-medium text-[#37368b] bg-[#37368b]/10 px-2 py-1 rounded">
-                      {featuredPost.category}
-                    </span>
-                    <span className="text-sm text-gray-500">{featuredPost.readTime}</span>
-                  </div>
-                  <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-3">
-                    {featuredPost.title}
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    {featuredPost.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div>
-                      <p className="font-medium text-gray-900">{featuredPost.author}</p>
-                      <p className="text-sm text-gray-500">{featuredPost.authorRole}</p>
+    return (
+        <section className="py-20 lg:py-28 bg-[#f8f9fc]" ref={containerRef}>
+            <div className="container mx-auto px-4 max-w-7xl">
+                
+                {/* Section Header */}
+                <div className="anim-header flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+                    <div className="text-left max-w-2xl">
+                        <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full mb-6">
+                            <span className="w-2 h-2 bg-[#ffc53a] rounded-full animate-pulse"></span>
+                            <span className="text-xs font-extrabold text-[#37368b] uppercase tracking-widest">Update Hub</span>
+                        </div>
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-[#37368b] mb-6 tracking-tight">
+                            Latest School News
+                        </h2>
+                        <p className="text-lg text-gray-500 font-medium leading-relaxed">
+                            Catch up on the latest achievements, events, and important announcements from our vibrant school community.
+                        </p>
                     </div>
-                    <button className="text-[#37368b] hover:text-[#2a2970] font-medium text-sm flex items-center gap-1 transition-colors">
-                      <span>Read More</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </button>
-                  </div>
+                    
+                    <Link 
+                        href="/blog" 
+                        className="group inline-flex items-center gap-3 px-6 py-3 bg-white border-2 border-[#37368b]/10 hover:border-[#37368b] rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                    >
+                        <span className="text-[#37368b] font-bold">Visit Full Blog</span>
+                        <div className="w-8 h-8 bg-[#37368b] text-white rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <ChevronRight className="w-5 h-5" />
+                        </div>
+                    </Link>
                 </div>
-              </div>
+
+                {/* Blog Grid */}
+                <div className="anim-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+                    {blogPosts.slice(0, visiblePosts).map((post) => (
+                        <article
+                            key={post.id}
+                            className="anim-post group flex flex-col bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-indigo-900/5 hover:shadow-indigo-900/10 hover:-translate-y-1 transition-all duration-300 border border-white"
+                        >
+                            {/* Image Wrapper */}
+                            <Link href={`/blog/${post.slug}`} className="relative h-64 overflow-hidden block">
+                                <img
+                                    src={post.image}
+                                    alt={post.title}
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                                {/* Overlay Gradient */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
+                                
+                                {/* Category Badge */}
+                                <div className="absolute top-4 left-4">
+                                    <span className="bg-white/95 backdrop-blur-md text-[#37368b] px-3 py-1.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wide shadow-sm flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#ffc53a]"></span>
+                                        {post.category || 'General'}
+                                    </span>
+                                </div>
+                            </Link>
+
+                            {/* Content Wrapper */}
+                            <div className="p-8 flex flex-col flex-1">
+                                {/* Meta Data */}
+                                <div className="flex items-center gap-4 mb-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                    <span className="flex items-center gap-1.5">
+                                        <Calendar className="w-3.5 h-3.5" />
+                                        {post.date}
+                                    </span>
+                                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                    <span className="flex items-center gap-1.5">
+                                        <Clock className="w-3.5 h-3.5" />
+                                        {post.readTime}
+                                    </span>
+                                </div>
+
+                                <Link href={`/blog/${post.slug}`} className="block mb-3">
+                                    <h3 className="text-xl font-extrabold text-gray-900 leading-tight group-hover:text-[#37368b] transition-colors line-clamp-2">
+                                        {post.title}
+                                    </h3>
+                                </Link>
+
+                                <p className="text-gray-500 text-sm leading-relaxed line-clamp-3 mb-6 font-medium">
+                                    {post.excerpt}
+                                </p>
+
+                                {/* Footer */}
+                                <div className="mt-auto pt-6 border-t border-gray-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-[#ffc53a]/20 flex items-center justify-center text-[#d97706] font-bold text-xs uppercase">
+                                            {post.author.charAt(0)}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-bold text-gray-900">{post.author}</span>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Author</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <Link 
+                                        href={`/blog/${post.slug}`} 
+                                        className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-[#37368b] hover:text-white transition-all duration-300"
+                                    >
+                                        <ChevronRight className="w-5 h-5 ml-0.5" />
+                                    </Link>
+                                </div>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+
+                {/* Load More Button */}
+                {visiblePosts < blogPosts.length && (
+                    <div className="text-center">
+                        <button
+                            onClick={loadMore}
+                            className="px-10 py-4 bg-white border-2 border-[#37368b] text-[#37368b] hover:bg-[#37368b] hover:text-white rounded-xl font-bold transition-all duration-300 shadow-lg shadow-indigo-900/10 active:scale-95"
+                        >
+                            Load More Stories
+                        </button>
+                    </div>
+                )}
             </div>
-          </div>
-        )}
-
-        {/* Blog Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {displayedPosts.map((post) => (
-            <article
-              key={post.id}
-              className="group border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 transition-colors"
-            >
-              {/* Image */}
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={post.image}
-                  alt={post.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute top-3 left-3">
-                  <span className="text-xs font-medium text-[#37368b] bg-white/90 backdrop-blur-sm px-2 py-1 rounded">
-                    {post.category}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs text-gray-500">{formatDate(post.date)}</span>
-                  <span className="text-xs text-gray-500">{post.readTime}</span>
-                </div>
-                
-                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
-                  {post.title}
-                </h3>
-                
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                  {post.excerpt}
-                </p>
-
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{post.author}</p>
-                    <p className="text-xs text-gray-500">{post.authorRole}</p>
-                  </div>
-                  <button className="text-sm text-[#37368b] hover:text-[#2a2970] font-medium transition-colors">
-                    Read →
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        {/* Load More Button */}
-        {visiblePosts < filteredPosts.length && (
-          <div className="text-center">
-            <button
-              onClick={loadMore}
-              className="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors"
-            >
-              Load More Stories
-            </button>
-          </div>
-        )}
-
-        {/* Newsletter CTA */}
-        <div className="mt-16">
-          <div className="bg-gray-50 border border-gray-200 rounded-2xl p-8 lg:p-10">
-            <div className="max-w-2xl mx-auto text-center">
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                Stay Connected
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Subscribe to receive school announcements, event updates, and important information
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-lg border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#37368b] focus:border-transparent"
-                />
-                <button className="px-6 py-3 bg-[#37368b] text-white font-medium rounded-lg hover:bg-[#2a2970] transition-colors whitespace-nowrap">
-                  Subscribe
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 mt-4">
-                We respect your privacy. Unsubscribe at any time.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+        </section>
+    );
 };
 
 export default BlogSection;

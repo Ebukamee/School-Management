@@ -31,11 +31,11 @@ const Navbar = () => {
 
   const navItems: NavItem[] = [
     { label: 'Home', href: '/' },
-    { label: 'Academics', href: '#academics' },
-    { label: 'Admissions', href: '#admissions' },
-    { label: 'Student Life', href: '#student-life' },
+    { label: 'Academics', href: '/academics' },
+    { label: 'Admissions', href: '/admissions' },
+    { label: 'Student Life', href: '/student-life' },
     { label: 'School News', href: '/blog' },
-    { label: 'Contact', href: '#contact' },
+    { label: 'Contact', href: '/contact' },
   ];
 
   return (

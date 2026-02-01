@@ -46,7 +46,6 @@ class AttendanceController extends Controller
     // Filter by date range
     ->whereDate('date', '>=', $startDate)
     ->whereDate('date', '<=', $endDate)
-    // FORCE MERGE: Squash all times/subjects into just the "Date"
     ->selectRaw('DATE(date) as date_only, status, count(*) as total')
     ->groupBy('date_only', 'status')
     ->orderBy('date_only')

@@ -10,11 +10,27 @@ import { dashboard, login, register } from '@/routes';
 import { type SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 
-export default function Welcome({
-    canRegister = true,
-}: {
-    canRegister?: boolean;
-}) {
+
+interface BlogPost {
+    id: number;
+    title: string;
+    excerpt: string;
+    slug: string;
+    author: string;
+    date: string;
+    image: string;
+    readTime: string;
+}
+interface HomeProps {
+    posts: BlogPost[];
+}
+export default function Welcome({ 
+    canRegister = true, 
+    posts = [] 
+}: { 
+    canRegister?: boolean; 
+    posts?: BlogPost[]; 
+}){
     const { auth } = usePage<SharedData>().props;
 
     return (
@@ -32,7 +48,7 @@ export default function Welcome({
                 <WhyOurSchool />
                 <Facilities />
                 <PrincipalMessage />
-                <BlogSection />
+                <BlogSection blogPosts={posts} />
                 <FAQ />
                 <Footer />
             </main>

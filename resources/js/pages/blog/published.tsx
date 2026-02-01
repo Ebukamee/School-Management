@@ -81,7 +81,7 @@ export default function Published({ posts }: { posts: Draft[] }) {
                                         </div>
                                     )}
                                     
-                                    {/* Draft Badge */}
+                                    
                                     <div className="absolute top-4 left-4 bg-green-50 backdrop-blur-md px-3 py-1.5 rounded-lg text-[10px] font-extrabold text-green-700 shadow-sm uppercase tracking-wide border border-green-200">
                                         Published
                                     </div>

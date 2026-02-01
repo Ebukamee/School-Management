@@ -13,11 +13,33 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Models\SchoolClass;
+use Illuminate\Support\Str;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
+
+
+
+
+    'posts' => Blog::where('is_published', true)
+            ->latest()
+            ->take(6) // Limit to 6 for the home page
+            ->get()
+            ->map(function ($post) {
+                return [
+                    'id' => $post->id,
+                    'title' => $post->title,
+                    'slug' => $post->slug,
+                    'excerpt' => Str::limit(strip_tags($post->content), 150),
+                    'author' => $post->user ? $post->user->name : 'Staff',
+                    'date' => $post->created_at->format('M d, Y'),
+                    'image' => $post->cover_image ? "/storage/{$post->cover_image}" : "/images/default.jpg",
+                    'readTime' => '5 min',
+                ];
+            }),
     ]);
+
 
 
 
@@ -32,7 +54,18 @@ Route::get('/register', function () {
         'nextAvailableReg' => $nextAvailable ? $nextAvailable->reg_number : null
     ]);
 })->name('register');
-
+Route::get('/academics', function () {
+    return Inertia::render('academics');
+})->name('academics');
+Route::get('/admissions', function () {
+    return Inertia::render('admissions');
+})->name('admissions');
+Route::get('contact', function () {
+    return Inertia::render('contact');
+})->name('contact');
+Route::get('/student-life', function () {
+    return Inertia::render('school_life');
+})->name('student-life');
 Route::get('/schedule', function () {
     $today = date('l');
 
