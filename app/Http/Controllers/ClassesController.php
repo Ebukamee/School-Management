@@ -10,19 +10,23 @@ use Illuminate\Validation\ValidationException;
 class ClassesController extends Controller
 {
     /**
-     * Display the Timetable.
+     * Display the Timetable (Read Only View).
      */
-
     public function index()
     {
         $user = auth()->user();
-        $classes = SchoolClass::orderBy('start_time')
-            ->where('grade_level', $user->form . $user->class) // Filter by user's class level
-            ->get();
+        
+        // If teacher, show their class. If admin, show all (or handle filtering via request)
+        $gradeLevel = ($user->role === 'teacher') ? $user->form . $user->class : null;
 
-        // 2. Group them by 'day' (e.g., 'Monday' => [...classes])
-        // This makes it easy to map columns in the frontend
-        $grouped = $classes->groupBy('day');
+        $query = SchoolClass::orderBy('start_time');
+
+        if ($gradeLevel) {
+            $query->where('grade_level', $gradeLevel);
+        }
+
+        // Group by day for the frontend grid
+        $grouped = $query->get()->groupBy('day');
 
         return Inertia::render('classes/index', [
             'timetable' => $grouped
@@ -30,60 +34,90 @@ class ClassesController extends Controller
     }
 
     /**
-     * Show the form for creating a new class.
+     * Show the form for creating/editing.
+     * NOW: Fetches existing classes so the teacher sees them while editing.
      */
     public function create()
     {
-        return Inertia::render('classes/create');
+        $user = auth()->user();
+        
+        // 1. Identify the Target Grade Level
+        // If Admin, they might need to select a class via dropdown (logic not shown here, assuming Teacher focus)
+        $targetGrade = $user->form . $user->class;
+
+        if ($user->role === 'teacher' && empty($targetGrade)) {
+            return redirect()->back()->withErrors(['error' => 'You are not assigned to a specific class/form.']);
+        }
+
+        // 2. Fetch Existing Schedule for this Class
+        // We get ALL classes for this grade so the frontend can draw the grid
+        $existingClasses = SchoolClass::where('grade_level', $targetGrade)
+            ->orderBy('start_time')
+            ->get();
+
+        return Inertia::render('classes/create', [
+            // Pass the target grade so the frontend knows what we are editing
+            'targetGrade' => $targetGrade,
+            // Pass the existing data to show "Occupied Slots"
+            'existingClasses' => $existingClasses, 
+        ]);
     }
 
     /**
-     * Store a newly created class in storage.
+     * Store or Update the Class Schedule.
      */
-
     public function store(Request $request)
     {
+        // 1. Validate (Removed 'room')
         $validated = $request->validate([
             'grade_level' => 'required|string',
-            'classes' => 'required|array|min:1', // Must be an array
+            'classes' => 'required|array|min:1',
             'classes.*.subject' => 'required|string',
             'classes.*.day' => 'required|string',
             'classes.*.start_time' => 'required',
-            'classes.*.end_time' => 'required',
-            'classes.*.room' => 'nullable|string',
         ], [
-            'classes.*.subject.required' => 'All added periods must have a subject.',
-            'classes.*.day.required' => 'Day is missing.',
+            'classes.*.subject.required' => 'Subject is required for all entries.',
         ]);
 
-
-        // Authorization: Only Admins and Teachers can create timetables
         $user = auth()->user();
+
+        // 2. Authorization
         if ($user->role !== 'admin' && $user->role !== 'teacher') {
-            return redirect()->back()->withErrors(['unauthorized' => 'You do not have permission to perform this action.']);
+            abort(403, 'Unauthorized action.');
         }
 
-        // Teachers can only create for their assigned class
-        if ($user->form . $user->class !== $request->grade_level) {
+        if ($user->role === 'teacher' && ($user->form . $user->class !== $request->grade_level)) {
             throw ValidationException::withMessages([
-                'reg_number' => [
-                    "Unauthorized: You can only create timetables for your assigned class {$user->form} {$user->class}."
-                ],
+                'grade_level' => ["You can only create timetables for your assigned class: {$user->form}{$user->class}."]
             ]);
         }
 
-        // Save each class entry
+        // 3. Prepare Data for Upsert (Removed 'room')
+        $upsertData = [];
+        $timestamp = now();
+
         foreach ($request->classes as $cls) {
-            SchoolClass::create([
+            $upsertData[] = [
                 'grade_level' => $request->grade_level,
-                'subject' => $cls['subject'],
-                'day' => $cls['day'],
-                'start_time' => $cls['start_time'],
-                'end_time' => $cls['end_time'],
-                'room' => $cls['room'] ?? null,
-            ]);
+                'subject'     => $cls['subject'],
+                'day'         => $cls['day'],
+                'start_time'  => $cls['start_time'],
+                // 'end_time'    => $cls['end_time'],
+                // 'room' => removed!
+                'created_at'  => $timestamp,
+                'updated_at'  => $timestamp,
+            ];
         }
 
-        return redirect()->route('classes.index')->with('success', 'Timetable saved successfully!');
+        // 4. Run Upsert (Removed 'room' from update list)
+        // If Grade+Day+Start matches, update Subject/EndTime/UpdatedAt.
+        SchoolClass::upsert(
+            $upsertData, 
+            ['grade_level', 'day', 'start_time'], 
+            ['subject', 'updated_at'] 
+        );
+
+        return redirect()->route('classes.index')
+            ->with('success', 'Timetable updated successfully!');
     }
 }

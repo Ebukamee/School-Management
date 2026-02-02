@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useForm, Head, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem, SharedData } from '@/types';
@@ -47,17 +47,24 @@ interface FormData {
     classes: any[];
 }
 
-export default function CreateClass() {
+// 1. Define the props to accept existing data
+interface PageProps extends SharedData {
+    targetGrade: string;
+    existingClasses: any[];
+}
+
+export default function CreateClass({ targetGrade, existingClasses }: PageProps) {
     const timeSlots = useMemo(() => generateTimeSlots(), []);
     const { auth } = usePage<SharedData>().props;
     
     // --- FORM STATE ---
     const { data, setData, post, processing, errors } = useForm<FormData>({
-        // FIX: Concatenate Form + Class without space (e.g., "JSS1A")
-        grade_level: auth.user.form && auth.user.class 
+        // Use the prop from controller if available, otherwise fallback to auth user logic
+        grade_level: targetGrade || (auth.user.form && auth.user.class 
             ? `${auth.user.form}${auth.user.class}` 
-            : "N/A",
-        classes: [] as any[] 
+            : "N/A"),
+        // Initialize with existing classes so the grid is pre-filled
+        classes: existingClasses || [] 
     });
 
     // Modal State
@@ -67,12 +74,15 @@ export default function CreateClass() {
 
     // --- ACTIONS ---
     const handleSlotClick = (day: string, start: string, end: string) => {
-        const existing = data.classes.find(c => c.day === day && c.start_time === start);
+        // Check both the form state AND the original existing classes
+        const existing = data.classes.find(c => c.day === day && c.start_time.slice(0,5) === start.slice(0,5));
         
         if (existing) {
-            if(confirm(`Remove ${existing.subject} from ${day} ${start}?`)) {
-                setData('classes', data.classes.filter(c => c !== existing));
-            }
+            // If clicked, we open the modal to EDIT instead of just confirming delete
+            // This is better UX for "Upsert" logic
+            setActiveSlot({ day, start, end });
+            setSubjectInput(existing.subject); // Pre-fill subject
+            setIsModalOpen(true);
         } else {
             setActiveSlot({ day, start, end });
             setSubjectInput('');
@@ -90,7 +100,22 @@ export default function CreateClass() {
             subject: subjectInput,
         };
 
-        setData('classes', [...data.classes, newClass]);
+        // Filter out any existing class in this slot first (Update logic)
+        const updatedClasses = data.classes.filter(
+            c => !(c.day === activeSlot.day && c.start_time.slice(0,5) === activeSlot.start.slice(0,5))
+        );
+
+        setData('classes', [...updatedClasses, newClass]);
+        setIsModalOpen(false);
+    };
+
+    // Helper to remove a class completely (if input is cleared or specific delete action)
+    const removeClass = () => {
+        if (!activeSlot) return;
+        const updatedClasses = data.classes.filter(
+            c => !(c.day === activeSlot.day && c.start_time.slice(0,5) === activeSlot.start.slice(0,5))
+        );
+        setData('classes', updatedClasses);
         setIsModalOpen(false);
     };
 
@@ -104,7 +129,8 @@ export default function CreateClass() {
     };
 
     const getSlotData = (day: string, start: string) => {
-        return data.classes.find(c => c.day === day && c.start_time === start);
+        // Ensure strictly matching string format (HH:MM)
+        return data.classes.find(c => c.day === day && c.start_time.slice(0,5) === start.slice(0,5));
     };
 
     // Common Input Class
@@ -126,7 +152,7 @@ export default function CreateClass() {
                             Timetable Builder
                         </h1>
                         <p className="text-gray-500 mt-2 ml-1">
-                            Click on any empty slot to schedule a class.
+                            Click on any slot to add or edit a class.
                         </p>
                     </div>
 
@@ -210,10 +236,8 @@ export default function CreateClass() {
                                                                 {filled.subject}
                                                             </span>
 
-                                                            {/* Hover Delete */}
-                                                            <div className="absolute inset-0 bg-red-50/90 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity backdrop-blur-[1px] rounded-md">
-                                                                <Trash2 className="w-5 h-5 text-red-500" />
-                                                            </div>
+                                                            {/* Visual Indicator for filled slot */}
+                                                            <div className="absolute right-1 top-1 w-1.5 h-1.5 bg-[#37368b] rounded-full opacity-20"></div>
                                                         </div>
                                                     ) : (
                                                         <div className="h-full w-full flex items-center justify-center min-h-[60px]">
@@ -260,7 +284,9 @@ export default function CreateClass() {
                     
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 relative z-10 animate-in zoom-in-95 duration-200">
                         <div className="text-center mb-6">
-                            <h3 className="text-lg font-bold text-gray-900">Add New Class</h3>
+                            <h3 className="text-lg font-bold text-gray-900">
+                                {subjectInput ? 'Edit Class' : 'Add New Class'}
+                            </h3>
                             <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mt-1">
                                 {activeSlot.day} • {activeSlot.start} - {activeSlot.end}
                             </p>
@@ -282,17 +308,28 @@ export default function CreateClass() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 mt-8">
-                            <button 
-                                onClick={() => setIsModalOpen(false)} 
-                                className="py-3 rounded-lg font-bold text-gray-500 hover:bg-gray-50 transition-colors border border-gray-200"
-                            >
-                                Cancel
-                            </button>
+                            {/* If editing, show Delete button, otherwise Cancel */}
+                            {getSlotData(activeSlot.day, activeSlot.start) ? (
+                                <button 
+                                    onClick={removeClass} 
+                                    className="py-3 rounded-lg font-bold text-red-500 hover:bg-red-50 transition-colors border border-red-100 flex items-center justify-center gap-2"
+                                >
+                                    <Trash2 className="w-4 h-4" /> Remove
+                                </button>
+                            ) : (
+                                <button 
+                                    onClick={() => setIsModalOpen(false)} 
+                                    className="py-3 rounded-lg font-bold text-gray-500 hover:bg-gray-50 transition-colors border border-gray-200"
+                                >
+                                    Cancel
+                                </button>
+                            )}
+                            
                             <button 
                                 onClick={saveSlot} 
                                 className="py-3 bg-[#37368b] hover:bg-[#2a2970] text-white rounded-lg font-bold shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5"
                             >
-                                Add Class
+                                {subjectInput ? 'Update' : 'Add'}
                             </button>
                         </div>
                     </div>

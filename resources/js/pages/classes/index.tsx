@@ -19,15 +19,14 @@ interface DbClass {
     grade_level: string;
     day: string;
     start_time: string;
-    end_time: string;
+    // end_time is removed or optional now
+    end_time?: string; 
 }
 
-// --- Props from Laravel ---
 interface Props {
     timetable: Record<string, DbClass[]>;
 }
 
-// --- Interfaces for UI Logic ---
 interface ClassTime {
     day: string;
     startTime: string;
@@ -50,12 +49,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     }
 ];
 
+// --- HELPER: Add Minutes to Time String ---
+// e.g. "08:00" + 40 -> "08:40"
+const addMinutes = (time: string, minutesToAdd: number) => {
+    if (!time) return "00:00";
+    const [h, m] = time.split(':').map(Number);
+    const date = new Date();
+    date.setHours(h, m + minutesToAdd, 0, 0);
+    return date.toTimeString().slice(0, 5); 
+};
+
 export default function Classes({ timetable = {} }: Props) {
-    // 1. Get User Data correctly from Inertia
     const { auth } = usePage<SharedData>().props;
     const user = auth.user;
-    
-    // 2. Guard Logic: Check if user is a student
     const isStudent = user.role === 'student';
 
     const [selectedClass, setSelectedClass] = useState<Class | null>(null);
@@ -65,8 +71,8 @@ export default function Classes({ timetable = {} }: Props) {
     const HOUR_HEIGHT = 100; 
     const PIXELS_PER_MINUTE = HOUR_HEIGHT / 60;
     const START_HOUR = 8; 
+    const CLASS_DURATION = 40; // Fixed duration in minutes
 
-    // --- HELPER: Generate Color from Subject Name ---
     const getSubjectColor = (subject: string) => {
         const colors = [
             "bg-blue-50 border-blue-200 text-[#37368b]",
@@ -89,6 +95,9 @@ export default function Classes({ timetable = {} }: Props) {
         
         Object.values(timetable).forEach((dayClasses) => {
             dayClasses.forEach((dbClass) => {
+                // Safety check for start_time
+                if (!dbClass.start_time) return;
+
                 const key = dbClass.subject;
 
                 if (!classMap.has(key)) {
@@ -102,10 +111,11 @@ export default function Classes({ timetable = {} }: Props) {
                     });
                 }
 
+                // FIX: Automatically calculate End Time here
                 classMap.get(key)?.times.push({
                     day: dbClass.day,
                     startTime: dbClass.start_time,
-                    endTime: dbClass.end_time,
+                    endTime: addMinutes(dbClass.start_time, CLASS_DURATION),
                 });
             });
         });
@@ -136,16 +146,16 @@ export default function Classes({ timetable = {} }: Props) {
         setSelectedClass(null);
     };
 
+    // Updated Safe Parser
     const parseTime = (timeStr: string): number => {
+        if (!timeStr) return 0; // Prevent crash
         const [hours, minutes] = timeStr.split(':').map(Number);
         return (hours * 60) + minutes;
     };
 
-    const getDurationHeight = (startTime: string, endTime: string): number => {
-        const startTotal = parseTime(startTime);
-        const endTotal = parseTime(endTime);
-        const durationMinutes = endTotal - startTotal;
-        return durationMinutes * PIXELS_PER_MINUTE;
+    // FIX: Calculate Height based on FIXED 40 mins, ignoring end_time logic
+    const getDurationHeight = (): number => {
+        return CLASS_DURATION * PIXELS_PER_MINUTE;
     };
 
     const getTimePosition = (startTime: string): number => {
@@ -171,7 +181,6 @@ export default function Classes({ timetable = {} }: Props) {
                         </p>
                     </div>
                     
-                    {/* GUARD: Only show button if NOT a student */}
                     {!isStudent && (
                         <div className="flex gap-3">
                             <Link href="/classes/create" className="bg-[#37368b] hover:bg-[#2a2970] text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-900/20 transition-all hover:-translate-y-0.5 active:scale-95">
@@ -241,7 +250,8 @@ export default function Classes({ timetable = {} }: Props) {
                                                     .filter(timeSlot => timeSlot.day === day.day)
                                                     .map((timeSlot, slotIndex) => {
                                                         const topPosition = getTimePosition(timeSlot.startTime);
-                                                        const height = getDurationHeight(timeSlot.startTime, timeSlot.endTime);
+                                                        // Using fixed height function
+                                                        const height = getDurationHeight(); 
                                                         
                                                         return (
                                                             <div
@@ -267,7 +277,7 @@ export default function Classes({ timetable = {} }: Props) {
                                                                     </div>
                                                                     <div className="flex items-center gap-1 text-[10px] opacity-80 font-mono">
                                                                         <Clock className="w-3 h-3" />
-                                                                        {timeSlot.startTime}
+                                                                        {timeSlot.startTime} - {timeSlot.endTime}
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -288,7 +298,6 @@ export default function Classes({ timetable = {} }: Props) {
                         <div className="p-2 bg-indigo-50 text-[#37368b] rounded-xl">
                             <BookOpen className="w-5 h-5" />
                         </div>
-                        {/* Dynamic Name */}
                         <h2 className="text-xl font-bold text-gray-900">{`Subjects for ${user.form} ${user.class}`}</h2>
                     </div>
 
