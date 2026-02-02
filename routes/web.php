@@ -164,8 +164,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/blog/{slug}/edit', [BlogController::class, 'edit'])->name('blog.edit');
 
     Route::put('/blog/{slug}', [BlogController::class, 'update'])->name('blog.update');
-    Route::put('/allowed-numbers/{reg_number}', [RegNumberController::class, 'update'])
-        ->name('reg_numbers.update');
+    
     Route::get('/allowed-numbers', [RegNumberController::class, 'index'])->name('reg_numbers.index');
     Route::post('/allowed-numbers', [RegNumberController::class, 'store'])->name('reg_numbers.store');
     Route::delete('/allowed-numbers/{id}', [RegNumberController::class, 'destroy'])->name('reg_numbers.destroy');
@@ -178,7 +177,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
 // Blog public routes
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
-
+// other public route
+Route::put('/allowed-numbers/{reg_number}', [RegNumberController::class, 'update'])
+        ->name('reg_numbers.update');
 
 
 
