@@ -158,7 +158,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/blog/drafts', [BlogController::class, 'drafts'])->name('blog.drafts');
     Route::get('/blog/manage', [BlogController::class, 'manage'])->name('blog.manage');
     Route::delete('/blog/{slug}', [BlogController::class, 'destroy'])->name('blog.destroy');
-
+    
+    Route::get('/users', [App\Http\Controllers\UserController::class, 'index'])->name('users.index');
+    Route::delete('/users/{user}', [App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy');
     Route::get('/blog/{slug}/edit', [BlogController::class, 'edit'])->name('blog.edit');
 
     Route::put('/blog/{slug}', [BlogController::class, 'update'])->name('blog.update');

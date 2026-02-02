@@ -153,6 +153,12 @@ const navItems = [
                 { title: 'Generate New', href: '/allowed-numbers/create', icon: PlusCircle },
                 { title: 'Manage All', href: '/allowed-numbers', icon: Settings },
             ]
+        },
+        {
+            title: 'Users',
+            icon: Users,
+            href:'/users',
+            active: isActive('/users'),
         }
     ] : []),
 ];
