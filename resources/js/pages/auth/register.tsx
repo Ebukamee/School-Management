@@ -59,7 +59,7 @@ export default function Register({ nextAvailableReg }: Props) {
         setIsVerifying(true);
         setCodeError('');
 
-        if (securityCode === '12345') { 
+        if (securityCode === import.meta.env.VITE_ADMIN_SECURITY_CODE) { 
             // Student Flow: Mark Number as Used -> Then Register
             if (data.role === 'student' && data.reg_number) {
                 router.put(`/allowed-numbers/${data.reg_number}`, { is_used: true }, {
