@@ -2,8 +2,9 @@
 FROM php:8.2-fpm
 
 # 2. Install Node.js 20 and system dependencies
+# ADDED: libpq-dev (Required for Postgres)
 RUN apt-get update && apt-get install -y \
-    git curl libpng-dev libonig-dev libxml2-dev zip unzip \
+    git curl libpng-dev libonig-dev libxml2-dev zip unzip libpq-dev \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
@@ -11,7 +12,8 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 4. Install PHP Extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+# ADDED: pdo_pgsql (The PHP Driver for Postgres)
+RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd
 
 # 5. Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -26,6 +28,9 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 # 9. Install Node dependencies & Build Inertia
+# ADDED: Your VITE variable logic from earlier (Recommended)
+
+
 RUN npm ci
 RUN npm run build
 
