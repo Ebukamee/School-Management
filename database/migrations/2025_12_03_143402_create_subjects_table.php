@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->string('subject_name');
-            $table->foreignId('result_id')->constrained('Results')->onDelete('cascade');
+            $table->foreignId('result_id')->constrained('results')->onDelete('cascade');
             $table->integer('ca_score');
             $table->integer('exam_score');
             $table->integer('total');
