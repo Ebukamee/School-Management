@@ -50,6 +50,6 @@ return Application::configure(basePath: dirname(__DIR__))
         //             ->setStatusCode($response->getStatusCode());
         //     }
 
-            // return $response;
+            return $response;
         });
     })->create();
