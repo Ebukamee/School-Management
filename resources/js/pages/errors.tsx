@@ -14,11 +14,11 @@ export default function Error({ status }: { status: number }) {
             desc: 'We are currently performing scheduled maintenance. Please check back in a few minutes.',
             icon: WifiOff
         },
-        // 500: {
-        //     title: 'Server Error',
-        //     desc: 'Whoops, something went wrong on our end. Our technical team has been notified.',
-        //     icon: AlertTriangle
-        // },
+        500: {
+            title: 'Server Error',
+            desc: 'Whoops, something went wrong on our end. Our technical team has been notified.',
+            icon: AlertTriangle
+        },
         404: {
             title: 'Page Not Found',
             desc: 'Sorry, the page you are looking for does not exist or has been moved.',

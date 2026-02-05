@@ -40,7 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             
             // Note: This logic only runs on Production (not local)
             // If you want to TEST the error page locally, remove "! app()->environment('local') &&" temporarily.
-            $validStatuses = [503, 404, 403];
+            $validStatuses = [500,503, 404, 403];
             // use next line later in production
             // if (! app()->environment('local') && in_array($response->getStatusCode(), $validStatuses))
 
