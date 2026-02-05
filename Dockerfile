@@ -1,42 +1,35 @@
-# 1. Use PHP 8.2
 FROM php:8.2-fpm
 
-# 2. Install Node.js 20 and system dependencies
-# ADDED: libpq-dev (Required for Postgres)
+# 1. Install System Dependencies (Includes Postgres)
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libonig-dev libxml2-dev zip unzip libpq-dev \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
 
-# 3. Clean up
+# 2. Clean up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 4. Install PHP Extensions
-# ADDED: pdo_pgsql (The PHP Driver for Postgres)
+# 3. Install PHP Extensions (Includes Postgres Driver)
 RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd
 
-# 5. Get Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# 6. Set working directory
+# 4. Setup Working Directory
 WORKDIR /var/www
-
-# 7. Copy project files
 COPY . .
 
-# 8. Install PHP dependencies
+# 5. Build Backend
 RUN composer install --no-dev --optimize-autoloader
 
-# 9. Install Node dependencies & Build Inertia
-# ADDED: Your VITE variable logic from earlier (Recommended)
+# 6. Build Frontend
+# (Make sure your VITE variable is passed in deploy args if needed)
+ARG VITE_ADMIN_SECURITY_CODE
+ENV VITE_ADMIN_SECURITY_CODE=$VITE_ADMIN_SECURITY_CODE
+RUN npm ci && npm run build
 
-
-RUN npm ci
-RUN npm run build
-
-# 10. Fix permissions
+# 7. Permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# 11. Start the server
+# 8. Start Server (WITH MIGRATION)
 EXPOSE 8080
-CMD php artisan serve --host=0.0.0.0 --port=8080
+CMD sh -c "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=8080"
